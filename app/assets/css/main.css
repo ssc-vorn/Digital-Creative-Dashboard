@@ -1,0 +1,117 @@
+@import "tailwindcss";
+@import "@nuxt/ui";
+
+@theme static {
+  --font-sans: "Inter", ui-sans-serif, system-ui, -apple-system, sans-serif;
+  --font-display: "Fraunces", ui-serif, Georgia, serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
+}
+
+:root {
+  --ui-radius: 0.5rem;
+
+  /* Chart series colors — CVD-validated categorical order (light mode). */
+  --viz-1: #2a78d6;
+  --viz-2: #eb6834;
+  --viz-3: #1baf7a;
+  --viz-4: #eda100;
+  --viz-5: #e87ba4;
+}
+
+.dark {
+  /* Same hues re-stepped for the dark surface, validated as a set. */
+  --viz-1: #3987e5;
+  --viz-2: #d95926;
+  --viz-3: #199e70;
+  --viz-4: #c98500;
+  --viz-5: #d55181;
+}
+
+/* ------------------------------------------------------------------ */
+/* Typography scale — the app's editorial voice lives here, not in    */
+/* per-page font-size soup.                                           */
+/* ------------------------------------------------------------------ */
+@layer components {
+  .type-display {
+    @apply font-display text-3xl/tight font-medium tracking-tight text-highlighted sm:text-4xl/tight;
+  }
+  .type-h1 {
+    @apply text-2xl/8 font-semibold tracking-tight text-highlighted;
+  }
+  .type-h2 {
+    @apply text-lg/7 font-semibold tracking-tight text-highlighted;
+  }
+  .type-h3 {
+    @apply text-base/6 font-semibold text-highlighted;
+  }
+  .type-h4 {
+    @apply text-sm/5 font-semibold text-highlighted;
+  }
+  .type-body-lg {
+    @apply text-base/7 text-default;
+  }
+  .type-body {
+    @apply text-sm/6 text-default;
+  }
+  .type-body-sm {
+    @apply text-xs/5 text-muted;
+  }
+  .type-caption {
+    @apply text-xs/4 text-muted;
+  }
+  .type-label {
+    @apply text-xs/4 font-medium text-default;
+  }
+  .type-overline {
+    @apply text-[11px]/4 font-semibold uppercase tracking-[0.08em] text-muted;
+  }
+}
+
+/* Thin, quiet scrollbars everywhere. */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--ui-border-accented) transparent;
+}
+
+::selection {
+  background-color: var(--ui-primary);
+  color: var(--ui-bg);
+}
+
+/* Page transition: a calm fade + drift, disabled for reduced motion. */
+.page-enter-active,
+.page-leave-active {
+  transition: opacity 0.15s ease, transform 0.15s ease;
+}
+.page-enter-from {
+  opacity: 0;
+  transform: translateY(4px);
+}
+.page-leave-to {
+  opacity: 0;
+}
+
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.15s ease;
+}
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
+}
+
+/* List reordering (kanban, notifications) */
+.list-move {
+  transition: transform 0.2s ease;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
