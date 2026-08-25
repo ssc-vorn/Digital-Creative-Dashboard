@@ -35,7 +35,7 @@ export const users: User[] = teamMembers.map((member, i) => {
   if (member.name === 'Daniel Okafor') roleId = 'role_super'
   if (member.name === 'Priya Raghavan' || member.name === 'Clara Novak') roleId = 'role_editor'
   const role = roles.find(r => r.id === roleId)!
-  const status: UserStatus = i === 18 ? 'invited' : i === 13 ? 'suspended' : 'active'
+  const status: UserStatus = i === 18 ? 'invited' : i === 13 ? 'suspended' : i === 16 ? 'pending' : i === 17 ? 'locked' : i === 19 ? 'deactivated' : 'active'
   return {
     id: `usr_${(i + 1).toString().padStart(2, '0')}`,
     name: member.name,
@@ -43,7 +43,7 @@ export const users: User[] = teamMembers.map((member, i) => {
     roleId,
     roleName: role.name,
     status,
-    lastActiveAt: status === 'invited' ? null : member.lastActiveAt,
+    lastActiveAt: status === 'invited' || status === 'pending' ? null : member.lastActiveAt,
     initials: toInitials(member.name),
     avatarColor: colorFor(i),
     twoFactorEnabled: rng() > 0.35,

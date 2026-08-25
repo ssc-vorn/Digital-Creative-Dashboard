@@ -3,7 +3,7 @@ import type { DropdownMenuItem } from '@nuxt/ui'
 import type { Project } from '~/types'
 import { projectRepository } from '~/repositories/projects'
 import { useAppStore } from '~/stores/app'
-import { ProjectsProjectCreateModal } from '#components'
+import { ProjectsProjectCreateModal, ProjectsProjectDuplicateModal } from '#components'
 
 const app = useAppStore()
 const confirm = useConfirm()
@@ -44,7 +44,12 @@ onMounted(() => {
 
 const publish = useMutation((id: string) => projectRepository.publish(id), { success: 'Project published', onSuccess: () => collection.reload() })
 const archive = useMutation((id: string) => projectRepository.archive(id), { success: 'Project archived', onSuccess: () => collection.reload() })
-const duplicate = useMutation((id: string) => projectRepository.duplicate(id), { success: 'Project duplicated', onSuccess: () => collection.reload() })
+
+const duplicateModal = overlay.create(ProjectsProjectDuplicateModal)
+async function openDuplicate(project: Project) {
+  const created = await duplicateModal.open({ source: project }).result
+  if (created) collection.reload()
+}
 const { moveToTrash } = useTrashAction(projectRepository, {
   resourceLabel: 'Project',
   itemName: p => p.title,
@@ -76,7 +81,7 @@ function rowActions(project: Project): DropdownMenuItem[][] {
     [
       { label: 'Edit', icon: 'i-lucide-pen-line', to: `/admin/projects/${project.id}` },
       { label: 'Preview', icon: 'i-lucide-external-link', onSelect: () => useToast().add({ title: 'Preview opens the public site once it exists', icon: 'i-lucide-info' }) },
-      { label: 'Duplicate', icon: 'i-lucide-copy', onSelect: () => duplicate.run(project.id) }
+      { label: 'Duplicate', icon: 'i-lucide-copy', onSelect: () => openDuplicate(project) }
     ],
     [
       ...(app.can('publish') && project.status !== 'published'
@@ -148,6 +153,7 @@ function rowActions(project: Project): DropdownMenuItem[][] {
           icon="i-lucide-x"
           @click="collection.clearFilters()"
         />
+        <CommonSavedViewsBar scope="projects" :collection="collection" />
 
         <div class="ms-auto flex items-center gap-0.5 rounded-md border border-default p-0.5">
           <UTooltip v-for="v in (['table', 'grid', 'editorial'] as const)" :key="v" :text="`${v.charAt(0).toUpperCase()}${v.slice(1)} view`">

@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { useLocalStorage } from '@vueuse/core'
 import type { CommandPaletteGroup, CommandPaletteItem } from '@nuxt/ui'
 import { navigationCommands } from '~/composables/useNavigation'
 import { projectRepository } from '~/repositories/projects'
@@ -6,6 +7,26 @@ import { blogRepository } from '~/repositories/content'
 import { clientRepository, leadRepository } from '~/repositories/crm'
 
 const colorMode = useColorMode()
+
+/* ------------------------------ Recent searches --------------------------- */
+
+interface RecentEntry { label: string, suffix?: string, icon?: string, to?: string }
+const recents = useLocalStorage<RecentEntry[]>('nss-recent-searches', [])
+
+function recordRecent(entry: RecentEntry) {
+  if (!entry.to) return
+  recents.value = [entry, ...recents.value.filter(r => r.label !== entry.label)].slice(0, 6)
+}
+
+function withRecent(item: CommandPaletteItem): CommandPaletteItem {
+  return {
+    ...item,
+    onSelect: (e: Event) => {
+      recordRecent({ label: item.label ?? '', suffix: item.suffix, icon: item.icon, to: typeof item.to === 'string' ? item.to : undefined })
+      item.onSelect?.(e)
+    }
+  }
+}
 
 const contentItems = shallowRef<CommandPaletteItem[]>([])
 const loaded = ref(false)
@@ -35,6 +56,13 @@ async function loadIndex() {
 onMounted(loadIndex)
 
 const groups = computed<CommandPaletteGroup<CommandPaletteItem>[]>(() => [
+  ...(recents.value.length > 0
+    ? [{
+        id: 'recent',
+        label: 'Recent',
+        items: recents.value.map(r => ({ label: r.label, suffix: r.suffix, icon: r.icon ?? 'i-lucide-history', to: r.to }))
+      }]
+    : []),
   {
     id: 'actions',
     label: 'Actions',
@@ -58,12 +86,12 @@ const groups = computed<CommandPaletteGroup<CommandPaletteItem>[]>(() => [
   {
     id: 'navigation',
     label: 'Go to',
-    items: navigationCommands()
+    items: navigationCommands().map(withRecent)
   },
   {
     id: 'content',
     label: 'Content',
-    items: contentItems.value
+    items: contentItems.value.map(withRecent)
   }
 ])
 

@@ -26,6 +26,10 @@ export function useCollection<T>(
   const pageSize = ref(options.pageSize ?? 10)
   const sortBy = ref<string | undefined>(options.sortBy)
   const sortDir = ref<'asc' | 'desc'>(options.sortDir ?? 'desc')
+  /** Optional date-range filter — set `dateField` once and bind `dateFrom`/`dateTo`. */
+  const dateField = ref<string | undefined>(undefined)
+  const dateFrom = ref('')
+  const dateTo = ref('')
 
   let requestId = 0
 
@@ -40,7 +44,10 @@ export function useCollection<T>(
         page: page.value,
         pageSize: pageSize.value,
         sortBy: sortBy.value,
-        sortDir: sortDir.value
+        sortDir: sortDir.value,
+        dateRange: dateField.value && (dateFrom.value || dateTo.value)
+          ? { field: dateField.value, from: dateFrom.value || undefined, to: dateTo.value || undefined }
+          : undefined
       })
       if (id !== requestId) return
       items.value = result.items
@@ -60,7 +67,7 @@ export function useCollection<T>(
     load()
   }, { debounce: 250 })
 
-  watch([() => ({ ...filters }), sortBy, sortDir], () => {
+  watch([() => ({ ...filters }), sortBy, sortDir, dateFrom, dateTo], () => {
     page.value = 1
     load()
   }, { deep: true })
@@ -69,11 +76,14 @@ export function useCollection<T>(
 
   const isEmpty = computed(() => status.value === 'loaded' && total.value === 0)
   const isFiltered = computed(() =>
-    Boolean(search.value) || Object.values(filters).some(v => v !== undefined && v !== '' && !(Array.isArray(v) && v.length === 0))
+    Boolean(search.value) || Boolean(dateFrom.value) || Boolean(dateTo.value) ||
+    Object.values(filters).some(v => v !== undefined && v !== '' && !(Array.isArray(v) && v.length === 0))
   )
 
   function clearFilters() {
     search.value = ''
+    dateFrom.value = ''
+    dateTo.value = ''
     for (const key of Object.keys(filters)) filters[key] = undefined
   }
 
@@ -89,6 +99,7 @@ export function useCollection<T>(
   return {
     items, total, status, error,
     search, filters, page, pageSize, sortBy, sortDir,
+    dateField, dateFrom, dateTo,
     isEmpty, isFiltered,
     load, reload: load, clearFilters, toggleSort
   }

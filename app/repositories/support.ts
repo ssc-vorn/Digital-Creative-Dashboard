@@ -80,6 +80,18 @@ export function applyQuery<T>(items: T[], query: ListQuery, searchFields: string
     })
   }
 
+  if (query.dateRange) {
+    const { field, from, to } = query.dateRange
+    result = result.filter((item) => {
+      const value = valueAt(item, field)
+      if (typeof value !== 'string') return true
+      const day = value.slice(0, 10)
+      if (from && day < from) return false
+      if (to && day > to) return false
+      return true
+    })
+  }
+
   if (query.sortBy) {
     const dir = query.sortDir === 'desc' ? -1 : 1
     const field = query.sortBy

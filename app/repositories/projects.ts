@@ -81,12 +81,6 @@ export const projectRepository = {
     return crud.update(id, { status: 'archived' })
   },
 
-  async duplicate(id: string): Promise<Project> {
-    const source = crud.all().find(p => p.id === id)
-    if (!source) throw new Error('Project not found')
-    return crud.create({ ...structuredClone(source), title: `${source.title} (copy)`, status: 'draft', publishedAt: null, scheduledFor: null, views: 0 } as Partial<Project>)
-  },
-
   async revisions(id: string): Promise<Revision[]> {
     const project = crud.all().find(p => p.id === id)
     return projectVersionRepository.getVersions(id, project?.status ?? 'draft')

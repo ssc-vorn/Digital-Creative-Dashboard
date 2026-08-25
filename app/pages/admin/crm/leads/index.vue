@@ -7,6 +7,7 @@ const app = useAppStore()
 const route = useRoute()
 
 const view = ref<'table' | 'kanban'>('table')
+const importOpen = ref(false)
 
 const collection = useCollection<Lead>(query => leadRepository.list(query), {
   pageSize: 10,
@@ -67,6 +68,8 @@ const { moveToTrash } = useTrashAction(leadRepository, {
           <USelect v-model="collection.filters.stage" :items="STAGE_OPTIONS" placeholder="Stage" class="w-36" />
           <USelect v-model="collection.filters.source" :items="SOURCE_OPTIONS" placeholder="Source" class="w-40" />
           <UButton v-if="collection.isFiltered.value" label="Clear" size="sm" color="neutral" variant="ghost" icon="i-lucide-x" @click="collection.clearFilters()" />
+          <CommonSavedViewsBar scope="leads" :collection="collection" />
+          <UButton label="Import" icon="i-lucide-upload" size="sm" color="neutral" variant="outline" @click="importOpen = true" />
         </template>
 
         <div class="ms-auto flex items-center gap-0.5 rounded-md border border-default p-0.5">
@@ -163,5 +166,7 @@ const { moveToTrash } = useTrashAction(leadRepository, {
         </div>
       </template>
     </UModal>
+
+    <CrmImportLeadsModal v-model:open="importOpen" @imported="collection.reload()" />
   </LayoutAdminPage>
 </template>

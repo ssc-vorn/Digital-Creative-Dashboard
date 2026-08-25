@@ -5,7 +5,7 @@ import { roleRepository, userRepository } from '~/repositories/platform'
 import { useAppStore } from '~/stores/app'
 
 const app = useAppStore()
-const confirm = useConfirm()
+const typedConfirm = useTypedConfirm()
 const toast = useToast()
 
 const collection = useCollection<User>(query => userRepository.list(query), {
@@ -44,28 +44,52 @@ const invite = useMutation(
 
 /* -------------------------------- Actions -------------------------------- */
 
-const suspend = useMutation((id: string) => userRepository.suspend(id), { success: 'User suspended', onSuccess: () => collection.reload() })
 const activate = useMutation((id: string) => userRepository.activate(id), { success: 'User activated', onSuccess: () => collection.reload() })
+const deactivate = useMutation((id: string) => userRepository.deactivate(id), { success: 'User deactivated', onSuccess: () => collection.reload() })
+const unlock = useMutation((id: string) => userRepository.unlock(id), { success: 'User unlocked', onSuccess: () => collection.reload() })
 
+async function confirmSuspend(user: User) {
+  const result = await typedConfirm({
+    title: 'Suspend user',
+    description: `${user.name} will immediately lose access to the workspace until reactivated.`,
+    itemLabel: user.name,
+    itemType: 'User',
+    confirmPhrase: 'SUSPEND USER',
+    confirmLabel: 'Suspend User',
+    requireReason: true,
+    reasonPlaceholder: 'Why is this account being suspended?',
+    showReauthPlaceholder: true
+  })
+  if (!result?.confirmed) return
+  await userRepository.suspend(user.id)
+  toast.add({ title: 'User suspended', description: `${user.name} — ${result.reason || 'no reason given'}`, color: 'success', icon: 'i-lucide-check' })
+  collection.reload()
+}
+
+/** Context-aware actions — never show every action at once, only what this status allows. */
 function rowActions(user: User): DropdownMenuItem[][] {
+  const lifecycle: DropdownMenuItem[] = []
+  if (user.status === 'invited' || user.status === 'pending') {
+    lifecycle.push({ label: 'Resend invite', icon: 'i-lucide-mail-plus', onSelect: () => toast.add({ title: `Invite resent to ${user.email} (mock)`, icon: 'i-lucide-mail', color: 'success' }) })
+  }
+  if (user.status === 'active') {
+    lifecycle.push({ label: 'Suspend', icon: 'i-lucide-user-x', color: 'error' as const, onSelect: () => confirmSuspend(user) })
+    lifecycle.push({ label: 'Deactivate', icon: 'i-lucide-user-minus', onSelect: () => deactivate.run(user.id) })
+  }
+  if (user.status === 'suspended' || user.status === 'deactivated') {
+    lifecycle.push({ label: 'Activate', icon: 'i-lucide-user-check', onSelect: () => activate.run(user.id) })
+  }
+  if (user.status === 'locked') {
+    lifecycle.push({ label: 'Unlock account', icon: 'i-lucide-lock-open', onSelect: () => unlock.run(user.id) })
+  }
+
   return [
     [
       { label: 'Edit role', icon: 'i-lucide-shield-check', to: '/admin/access/roles' },
       { label: 'Reset password', icon: 'i-lucide-key-round', onSelect: () => toast.add({ title: `Password reset email sent to ${user.email} (mock)`, icon: 'i-lucide-mail', color: 'success' }) },
       { label: 'Revoke sessions', icon: 'i-lucide-monitor-x', onSelect: () => toast.add({ title: `All sessions revoked for ${user.name} (mock)`, icon: 'i-lucide-check', color: 'success' }) }
     ],
-    [
-      user.status === 'suspended'
-        ? { label: 'Activate', icon: 'i-lucide-user-check', onSelect: () => activate.run(user.id) }
-        : {
-            label: 'Suspend',
-            icon: 'i-lucide-user-x',
-            color: 'error' as const,
-            onSelect: async () => {
-              if (await confirm({ title: `Suspend ${user.name}?`, description: 'They lose access immediately until reactivated.', confirmLabel: 'Suspend', danger: true })) suspend.run(user.id)
-            }
-          }
-    ]
+    lifecycle
   ]
 }
 </script>
@@ -80,7 +104,7 @@ function rowActions(user: User): DropdownMenuItem[][] {
       <div class="flex flex-wrap items-center gap-2">
         <UInput v-model="collection.search.value" icon="i-lucide-search" placeholder="Search users…" class="w-full sm:w-64" />
         <USelect v-model="collection.filters.roleName" :items="roles.map(r => r.name)" placeholder="Role" class="w-44" />
-        <USelect v-model="collection.filters.status" :items="['active', 'invited', 'suspended']" placeholder="Status" class="w-32" />
+        <USelect v-model="collection.filters.status" :items="['invited', 'pending', 'active', 'suspended', 'deactivated', 'locked']" placeholder="Status" class="w-36" />
         <UButton v-if="collection.isFiltered.value" label="Clear" size="sm" color="neutral" variant="ghost" icon="i-lucide-x" @click="collection.clearFilters()" />
       </div>
 

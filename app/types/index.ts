@@ -27,6 +27,7 @@ export interface ListQuery {
   pageSize?: number
   sortBy?: string
   sortDir?: 'asc' | 'desc'
+  dateRange?: { field: string, from?: string, to?: string }
   filters?: Record<string, string | string[] | boolean | undefined>
 }
 
