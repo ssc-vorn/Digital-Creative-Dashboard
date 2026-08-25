@@ -7,19 +7,29 @@ const { data: services, status, load } = useResource<SystemService[]>(() => syst
 const overall = computed(() => {
   const list = services.value ?? []
   if (list.some(s => s.status === 'offline')) return { label: 'Partial outage', status: 'offline' }
-  if (list.some(s => s.status === 'warning')) return { label: 'Degraded performance', status: 'warning' }
+  if (list.some(s => s.status === 'warning' || s.status === 'degraded')) return { label: 'Degraded performance', status: 'warning' }
   return { label: 'All systems operational', status: 'operational' }
 })
 
 const HISTORY_CLASS: Record<string, string> = {
   operational: 'bg-success',
+  degraded: 'bg-warning',
   warning: 'bg-warning',
   offline: 'bg-error'
 }
+
+const lastPageLoad = ref(new Date().toISOString())
 </script>
 
 <template>
   <LayoutAdminPage title="System Health">
+    <template #actions>
+      <p class="hidden items-center gap-2 text-xs text-muted sm:flex">
+        Updated {{ relativeTime(lastPageLoad) }}
+        <UButton label="Refresh" size="xs" color="neutral" variant="ghost" icon="i-lucide-refresh-cw" @click="load(); lastPageLoad = new Date().toISOString()" />
+      </p>
+    </template>
+
     <div class="mx-auto w-full max-w-4xl space-y-4">
       <div v-if="status === 'loading' || status === 'idle'" class="space-y-3">
         <USkeleton class="h-16 w-full" />
@@ -58,7 +68,7 @@ const HISTORY_CLASS: Record<string, string> = {
                 :title="`${24 - i}h ago: ${h}`"
               />
             </div>
-            <p class="text-[11px] text-dimmed">Last 24 hours, hourly</p>
+            <p class="text-[11px] text-dimmed">Last 24 hours, hourly · checked {{ relativeTime(service.lastCheckedAt) }}</p>
           </UCard>
         </div>
       </template>

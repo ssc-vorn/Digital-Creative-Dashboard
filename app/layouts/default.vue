@@ -4,6 +4,7 @@ import { useMockRealtime } from '~/composables/useMockRealtime'
 
 const notifications = useNotificationsStore()
 const realtime = useMockRealtime()
+const shortcutsOpen = ref(false)
 
 onMounted(() => {
   notifications.load()
@@ -11,16 +12,24 @@ onMounted(() => {
 })
 
 defineShortcuts({
-  n: () => { notifications.panelOpen = !notifications.panelOpen }
+  n: () => { notifications.panelOpen = !notifications.panelOpen },
+  '?': () => { shortcutsOpen.value = true }
 })
 </script>
 
 <template>
-  <UDashboardGroup unit="rem">
-    <LayoutAppSidebar />
-    <LayoutAppSearch />
-    <LayoutNotificationCenter />
+  <div class="flex min-h-screen flex-col">
+    <LayoutMaintenanceBanner />
+    <LayoutOfflineBanner />
 
-    <slot />
-  </UDashboardGroup>
+    <UDashboardGroup unit="rem" class="min-h-0 flex-1">
+      <LayoutAppSidebar />
+      <LayoutAppSearch />
+      <LayoutNotificationCenter />
+
+      <slot />
+    </UDashboardGroup>
+
+    <LayoutShortcutsHelpModal v-model:open="shortcutsOpen" />
+  </div>
 </template>

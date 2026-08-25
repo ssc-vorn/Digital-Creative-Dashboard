@@ -5,7 +5,7 @@ import { useDashboardStore } from '~/stores/dashboard'
 
 const app = useAppStore()
 const dashboard = useDashboardStore()
-const { data: analytics, status: analyticsStatus, load: loadAnalytics } = useAnalyticsOverview()
+const { data: analytics, status: analyticsStatus, updatedAt, load: loadAnalytics } = useAnalyticsOverview()
 
 const customizeItems = computed<DropdownMenuItem[][]>(() => [
   dashboard.available.length > 0
@@ -28,6 +28,10 @@ const SIZE_CLASS: Record<string, string> = {
 <template>
   <LayoutAdminPage title="Dashboard" no-breadcrumb>
     <template #actions>
+      <p v-if="updatedAt" class="hidden items-center gap-1.5 text-xs text-muted md:flex">
+        Updated {{ relativeTime(updatedAt) }}
+        <UButton icon="i-lucide-refresh-cw" size="xs" color="neutral" variant="ghost" aria-label="Refresh dashboard data" @click="loadAnalytics(true)" />
+      </p>
       <UDropdownMenu :items="customizeItems" :content="{ align: 'end' }">
         <UButton label="Customize" icon="i-lucide-layout-grid" color="neutral" variant="ghost" class="hidden sm:inline-flex" />
       </UDropdownMenu>
@@ -55,6 +59,8 @@ const SIZE_CLASS: Record<string, string> = {
           <CommonKpiCard v-for="metric in analytics.kpis" :key="metric.key" :metric="metric" />
         </div>
       </section>
+
+      <DashboardOnboardingChecklist class="mb-6" />
 
       <!-- Widget board -->
       <TransitionGroup name="fade" tag="div" class="grid grid-cols-1 gap-4 lg:grid-cols-6">

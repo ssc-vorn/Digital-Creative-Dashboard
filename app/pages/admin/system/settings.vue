@@ -2,9 +2,29 @@
 import { mockConfig } from '~/repositories/support'
 import type { MockErrorKind } from '~/repositories/support'
 import { useAppStore } from '~/stores/app'
+import { useSystemStore } from '~/stores/system'
 
 const app = useAppStore()
+const system = useSystemStore()
 const toast = useToast()
+const confirm = useConfirm()
+
+const maintenanceScheduleDraft = ref('')
+
+async function toggleMaintenance(value: boolean) {
+  if (value) {
+    const ok = await confirm({
+      title: 'Enable maintenance mode?',
+      description: 'Visitors to the public site will see the maintenance message until you disable this. The admin console stays reachable if "Allow admin access" is on.',
+      confirmLabel: 'Enable maintenance mode',
+      danger: true
+    })
+    if (!ok) return
+  }
+  system.maintenanceEnabled = value
+  system.maintenanceScheduledFor = value ? (maintenanceScheduleDraft.value || null) : null
+  toast.add({ title: value ? 'Maintenance mode enabled' : 'Maintenance mode disabled', color: value ? 'warning' : 'success', icon: value ? 'i-lucide-construction' : 'i-lucide-check' })
+}
 
 const tab = ref('general')
 const tabs = [
@@ -38,7 +58,7 @@ const settings = reactive({
   },
   localization: {
     defaultLocale: 'en',
-    locales: ['en', 'da'],
+    locales: ['en', 'km'],
     currency: 'USD'
   },
   notifications: {
@@ -87,7 +107,6 @@ const RETENTION_OPTIONS = [
   { label: '90 Days', value: 90 },
   { label: 'Never', value: Number.POSITIVE_INFINITY }
 ]
-const confirm = useConfirm()
 const retentionLabel = computed(() => RETENTION_OPTIONS.find(o => o.value === mockConfig.trashRetentionDays)?.label ?? '30 Days')
 
 async function confirmRetentionChange(label: string) {
@@ -203,13 +222,13 @@ async function confirmRetentionChange(label: string) {
       <!-- Localization -->
       <UCard v-else-if="tab === 'localization'" :ui="{ body: 'space-y-4' }">
         <UFormField label="Default locale">
-          <USelect v-model="settings.localization.defaultLocale" :items="['en', 'da', 'de', 'fr']" class="w-full" />
+          <USelect v-model="settings.localization.defaultLocale" :items="[{ label: 'English', value: 'en' }, { label: 'Khmer (ខ្មែរ)', value: 'km' }]" value-key="value" class="w-full" />
         </UFormField>
-        <UFormField label="Enabled locales">
+        <UFormField label="Enabled locales" description="Studio dates, numbers and currency already flow through shared formatters, so adding a locale here is UI-ready for real translations later.">
           <UInputTags v-model="settings.localization.locales" class="w-full" />
         </UFormField>
         <UFormField label="Currency">
-          <USelect v-model="settings.localization.currency" :items="['USD', 'EUR', 'DKK', 'GBP']" class="w-full" />
+          <USelect v-model="settings.localization.currency" :items="['USD', 'EUR', 'DKK', 'GBP', 'KHR']" class="w-full" />
         </UFormField>
       </UCard>
 
@@ -275,6 +294,41 @@ async function confirmRetentionChange(label: string) {
             </div>
           </template>
           <USwitch v-model="restricted" label="Preview Viewer (read-only) role" />
+        </UCard>
+
+        <UCard :ui="{ body: 'space-y-4' }">
+          <template #header>
+            <div class="flex items-center justify-between gap-3">
+              <div>
+                <h2 class="type-h3">Maintenance mode</h2>
+                <p class="type-body-sm mt-0.5">Show visitors a maintenance page while you work.</p>
+              </div>
+              <UBadge v-if="system.maintenanceEnabled" color="warning" variant="subtle">Enabled</UBadge>
+            </div>
+          </template>
+
+          <UAlert
+            v-if="system.maintenanceEnabled"
+            icon="i-lucide-construction"
+            color="warning"
+            variant="subtle"
+            title="Maintenance mode is live"
+            description="The public site is showing your maintenance message right now."
+          />
+
+          <UFormField label="Message shown to visitors">
+            <UTextarea v-model="system.maintenanceMessage" :rows="2" class="w-full" />
+          </UFormField>
+          <UFormField label="Scheduled end (optional)">
+            <UInput v-model="maintenanceScheduleDraft" type="datetime-local" class="w-full" />
+          </UFormField>
+          <USwitch v-model="system.allowAdminAccess" label="Allow admin console access while enabled" />
+
+          <USwitch
+            :model-value="system.maintenanceEnabled"
+            :label="system.maintenanceEnabled ? 'Maintenance mode is on' : 'Maintenance mode is off'"
+            @update:model-value="toggleMaintenance"
+          />
         </UCard>
       </div>
     </div>

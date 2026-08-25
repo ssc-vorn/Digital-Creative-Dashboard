@@ -10,6 +10,7 @@ let pending: Promise<AnalyticsOverview> | null = null
 export function useAnalyticsOverview() {
   const data = useState<AnalyticsOverview | null>('analytics-overview', () => null)
   const status = ref<'idle' | 'loading' | 'loaded' | 'error'>(data.value ? 'loaded' : 'idle')
+  const updatedAt = useState<string | null>('analytics-overview-updated-at', () => null)
 
   async function load(force = false) {
     if (data.value && !force) {
@@ -20,6 +21,7 @@ export function useAnalyticsOverview() {
     try {
       pending = pending ?? analyticsRepository.overview()
       data.value = await pending
+      updatedAt.value = new Date().toISOString()
       status.value = 'loaded'
     } catch {
       status.value = 'error'
@@ -30,5 +32,5 @@ export function useAnalyticsOverview() {
 
   onMounted(() => load())
 
-  return { data, status, load }
+  return { data, status, updatedAt, load }
 }

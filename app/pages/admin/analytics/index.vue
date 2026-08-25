@@ -1,9 +1,16 @@
 <script setup lang="ts">
-const { data, status, load } = useAnalyticsOverview()
+const { data, status, updatedAt, load } = useAnalyticsOverview()
 </script>
 
 <template>
   <LayoutAdminPage title="Analytics Overview">
+    <template #actions>
+      <p v-if="updatedAt" class="flex items-center gap-1.5 text-xs text-muted">
+        Updated {{ relativeTime(updatedAt) }}
+        <UButton icon="i-lucide-refresh-cw" size="xs" color="neutral" variant="ghost" aria-label="Refresh analytics data" @click="load(true)" />
+      </p>
+    </template>
+
     <div class="mx-auto w-full max-w-7xl space-y-6">
       <div v-if="status === 'loading' || status === 'idle'" class="space-y-6">
         <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-5">
