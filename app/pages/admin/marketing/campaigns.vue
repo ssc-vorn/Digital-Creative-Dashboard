@@ -28,6 +28,12 @@ const create = useMutation(
   () => campaignRepository.create({ ...createState }),
   { success: 'Campaign created', onSuccess: () => { createOpen.value = false; collection.reload() } }
 )
+
+const { moveToTrash } = useTrashAction(campaignRepository, {
+  resourceLabel: 'Campaign',
+  itemName: c => c.name,
+  onDone: () => collection.reload()
+})
 </script>
 
 <template>
@@ -85,6 +91,9 @@ const create = useMutation(
         </template>
         <template #cell-conversionRate="{ row }">
           <span class="block text-right tabular-nums text-default">{{ formatPercent(row.conversionRate, 2) }}</span>
+        </template>
+        <template #actions="{ row }">
+          <CommonRowActionsMenu :items="[[{ label: 'Move to Trash', icon: 'i-lucide-trash-2', color: 'error', onSelect: () => moveToTrash(row) }]]" />
         </template>
       </CommonDataTable>
     </div>

@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { useOnline, useTimeAgo } from '@vueuse/core'
+
 const props = withDefaults(defineProps<{
   title: string
   backTo: string
@@ -7,14 +9,21 @@ const props = withDefaults(defineProps<{
   saving?: boolean
   dirty?: boolean
   canSave?: boolean
+  saveError?: string | null
+  lastSavedAt?: string | null
 }>(), {
   status: undefined,
   saving: false,
   dirty: false,
-  canSave: true
+  canSave: true,
+  saveError: null,
+  lastSavedAt: null
 })
 
 const emit = defineEmits<{ save: [] }>()
+
+const online = useOnline()
+const savedAgo = useTimeAgo(() => props.lastSavedAt ?? new Date())
 
 defineShortcuts({
   meta_s: () => {
@@ -39,11 +48,21 @@ defineShortcuts({
           <p class="mt-0.5 flex items-center gap-2 text-xs text-muted">
             <CommonStatusBadge v-if="props.status" :status="props.status" />
             <Transition name="fade" mode="out-in">
-              <span v-if="props.saving" key="saving" class="inline-flex items-center gap-1">
+              <span v-if="!online" key="offline" class="inline-flex items-center gap-1 text-warning">
+                <UIcon name="i-lucide-cloud-off" class="size-3" /> Offline — changes kept as a local draft
+              </span>
+              <span v-else-if="props.saving" key="saving" class="inline-flex items-center gap-1">
                 <UIcon name="i-lucide-loader-circle" class="size-3 animate-spin motion-reduce:animate-none" /> Saving…
+              </span>
+              <span v-else-if="props.saveError" key="save-error" class="inline-flex items-center gap-1 text-error">
+                <UIcon name="i-lucide-triangle-alert" class="size-3" /> Save failed
+                <button type="button" class="underline underline-offset-2 hover:text-error/80" @click="emit('save')">Retry</button>
               </span>
               <span v-else-if="props.dirty" key="dirty" class="inline-flex items-center gap-1 text-warning">
                 <UIcon name="i-lucide-circle-dot" class="size-3" /> Unsaved changes
+              </span>
+              <span v-else-if="props.lastSavedAt" key="saved-at" class="inline-flex items-center gap-1">
+                <UIcon name="i-lucide-check" class="size-3" /> Saved {{ savedAgo }}
               </span>
               <span v-else key="saved" class="inline-flex items-center gap-1">
                 <UIcon name="i-lucide-check" class="size-3" /> Saved

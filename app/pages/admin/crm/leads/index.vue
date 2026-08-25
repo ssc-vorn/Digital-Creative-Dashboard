@@ -46,6 +46,12 @@ const create = useMutation(
 onMounted(() => {
   if (route.query.new) createOpen.value = true
 })
+
+const { moveToTrash } = useTrashAction(leadRepository, {
+  resourceLabel: 'Lead',
+  itemName: l => `${l.name} · ${l.company}`,
+  onDone: () => collection.reload()
+})
 </script>
 
 <template>
@@ -120,7 +126,12 @@ onMounted(() => {
           <span class="text-muted">{{ relativeTime(row.createdAt) }}</span>
         </template>
         <template #actions="{ row }">
-          <UButton :to="`/admin/crm/leads/${row.id}`" icon="i-lucide-arrow-right" size="xs" color="neutral" variant="ghost" :aria-label="`Open ${row.name}`" />
+          <div class="flex justify-end gap-0.5">
+            <UButton :to="`/admin/crm/leads/${row.id}`" icon="i-lucide-arrow-right" size="xs" color="neutral" variant="ghost" :aria-label="`Open ${row.name}`" />
+            <CommonRowActionsMenu
+              :items="[[{ label: 'Move to Trash', icon: 'i-lucide-trash-2', color: 'error', onSelect: () => moveToTrash(row) }]]"
+            />
+          </div>
         </template>
       </CommonDataTable>
     </div>

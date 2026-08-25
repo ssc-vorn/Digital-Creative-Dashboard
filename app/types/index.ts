@@ -347,7 +347,7 @@ export type PermissionKey =
   | 'view' | 'create' | 'edit' | 'delete' | 'publish'
   | 'manage-users' | 'manage-settings' | 'manage-analytics'
 
-export type UserStatus = 'active' | 'invited' | 'suspended'
+export type UserStatus = 'invited' | 'pending' | 'active' | 'suspended' | 'deactivated' | 'locked'
 
 export interface User extends Timestamps {
   id: EntityId
@@ -384,7 +384,12 @@ export interface AuditLog {
   resourceName: string
   date: string
   ip: string
+  device: string
+  browser: string
   result: 'success' | 'failure'
+  reason?: string
+  before?: string
+  after?: string
 }
 
 export interface SecurityEvent {
@@ -417,7 +422,7 @@ export interface LoginEvent {
   result: 'success' | 'failure'
 }
 
-export type ServiceHealth = 'operational' | 'warning' | 'offline'
+export type ServiceHealth = 'operational' | 'degraded' | 'warning' | 'offline'
 
 export interface SystemService {
   id: EntityId
@@ -426,6 +431,7 @@ export interface SystemService {
   status: ServiceHealth
   uptime: number
   latencyMs: number
+  lastCheckedAt: string
   history: ServiceHealth[]
 }
 
@@ -511,4 +517,128 @@ export interface AnalyticsOverview {
   geo: GeoStat[]
   topContent: TopContentItem[]
   funnel: FunnelStage[]
+}
+
+/* ------------------------------------------------------------------ */
+/* Data safety — soft delete / trash                                   */
+/* ------------------------------------------------------------------ */
+
+export interface DependencyWarning {
+  label: string
+  count: number
+}
+
+export interface TrashMeta {
+  deletedBy: string
+  deletedAt: string
+  deletionReason?: string
+  originalLocation: string
+  retentionDays: number
+  dependencies: DependencyWarning[]
+}
+
+export interface TrashedItem<T = unknown> {
+  /** Composite id: `${resourceType}:${resourceId}` — unique across the whole trash. */
+  id: string
+  resourceType: string
+  resourceId: string
+  title: string
+  subtitle: string
+  trash: TrashMeta
+  item: T
+}
+
+export interface RestoreConflict {
+  field: 'slug'
+  value: string
+}
+
+/* ------------------------------------------------------------------ */
+/* Content safety — versions, drafts                                   */
+/* ------------------------------------------------------------------ */
+
+export interface Version {
+  id: EntityId
+  resourceType: string
+  resourceId: string
+  version: number
+  author: string
+  date: string
+  status: ContentStatus
+  summary: string
+  /** Illustrative snapshot fields used by the mock compare view. */
+  snapshot: { title: string, excerpt: string, metric?: string }
+}
+
+export interface VersionDiffField {
+  field: string
+  kind: 'added' | 'removed' | 'changed' | 'unchanged'
+  before?: string
+  after?: string
+}
+
+export interface VersionDiff {
+  fromVersion: number
+  toVersion: number
+  fields: VersionDiffField[]
+}
+
+/* ------------------------------------------------------------------ */
+/* Collaboration                                                       */
+/* ------------------------------------------------------------------ */
+
+export interface Comment {
+  id: EntityId
+  resourceType: string
+  resourceId: string
+  author: string
+  authorColor: string
+  body: string
+  mentions: string[]
+  date: string
+  resolved: boolean
+  pinned: boolean
+  parentId: string | null
+}
+
+export type ActivityEventType =
+  | 'created' | 'updated' | 'published' | 'archived' | 'trashed' | 'restored'
+  | 'commented' | 'approved' | 'rejected' | 'assigned' | 'status-changed'
+
+export interface ActivityEvent {
+  id: EntityId
+  type: ActivityEventType
+  actor: string
+  summary: string
+  date: string
+  meta?: string
+}
+
+/* ------------------------------------------------------------------ */
+/* Productivity                                                        */
+/* ------------------------------------------------------------------ */
+
+export interface SavedView {
+  id: EntityId
+  scope: string
+  name: string
+  filters: Record<string, string | undefined>
+  search: string
+  sortBy?: string
+  sortDir?: 'asc' | 'desc'
+  createdAt: string
+}
+
+export interface ImportRowResult {
+  row: number
+  status: 'valid' | 'invalid'
+  summary: string
+  error?: string
+}
+
+export interface ImportResult {
+  total: number
+  valid: number
+  invalid: number
+  rows: ImportRowResult[]
 }

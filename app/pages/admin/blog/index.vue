@@ -6,7 +6,6 @@ import { teamRepository } from '~/repositories/operations'
 import { useAppStore } from '~/stores/app'
 
 const app = useAppStore()
-const confirm = useConfirm()
 const route = useRoute()
 const toast = useToast()
 
@@ -65,7 +64,11 @@ async function bulkPublish(ids: string[], clear: () => void) {
   clear()
   collection.reload()
 }
-const destroy = useMutation((id: string) => blogRepository.remove(id), { success: 'Post deleted', onSuccess: () => collection.reload() })
+const { moveToTrash } = useTrashAction(blogRepository, {
+  resourceLabel: 'Blog Post',
+  itemName: p => p.title,
+  onDone: () => collection.reload()
+})
 
 function rowActions(post: BlogPost): DropdownMenuItem[][] {
   return [
@@ -74,14 +77,7 @@ function rowActions(post: BlogPost): DropdownMenuItem[][] {
       { label: 'Preview', icon: 'i-lucide-external-link', onSelect: () => toast.add({ title: 'Preview opens the public site once it exists', icon: 'i-lucide-info' }) },
       ...(app.can('publish') && post.status !== 'published' ? [{ label: 'Publish', icon: 'i-lucide-send', onSelect: () => publish.run(post.id) }] : [])
     ],
-    [{
-      label: 'Delete',
-      icon: 'i-lucide-trash-2',
-      color: 'error' as const,
-      onSelect: async () => {
-        if (await confirm({ title: `Delete “${post.title}”?`, confirmLabel: 'Delete post', danger: true })) destroy.run(post.id)
-      }
-    }]
+    [{ label: 'Move to Trash', icon: 'i-lucide-trash-2', color: 'error' as const, onSelect: () => moveToTrash(post) }]
   ]
 }
 </script>

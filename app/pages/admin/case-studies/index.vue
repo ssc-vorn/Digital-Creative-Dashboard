@@ -5,7 +5,6 @@ import { caseStudyRepository } from '~/repositories/content'
 import { useAppStore } from '~/stores/app'
 
 const app = useAppStore()
-const confirm = useConfirm()
 
 const collection = useCollection<CaseStudy>(query => caseStudyRepository.list(query), {
   pageSize: 10,
@@ -23,11 +22,11 @@ const columns = [
 
 const duplicate = useMutation((id: string) => caseStudyRepository.duplicate(id), { success: 'Case study duplicated', onSuccess: () => collection.reload() })
 const publish = useMutation((id: string) => caseStudyRepository.publish(id), { success: 'Case study published', onSuccess: () => collection.reload() })
-const destroy = useMutation((id: string) => caseStudyRepository.remove(id), { success: 'Case study deleted', onSuccess: () => collection.reload() })
-
-async function confirmDelete(item: CaseStudy) {
-  if (await confirm({ title: `Delete “${item.title}”?`, confirmLabel: 'Delete', danger: true })) destroy.run(item.id)
-}
+const { moveToTrash } = useTrashAction(caseStudyRepository, {
+  resourceLabel: 'Case Study',
+  itemName: c => c.title,
+  onDone: () => collection.reload()
+})
 
 function rowActions(item: CaseStudy): DropdownMenuItem[][] {
   return [
@@ -36,7 +35,7 @@ function rowActions(item: CaseStudy): DropdownMenuItem[][] {
       { label: 'Duplicate', icon: 'i-lucide-copy', onSelect: () => duplicate.run(item.id) },
       ...(app.can('publish') && item.status !== 'published' ? [{ label: 'Publish', icon: 'i-lucide-send', onSelect: () => publish.run(item.id) }] : [])
     ],
-    [{ label: 'Delete', icon: 'i-lucide-trash-2', color: 'error' as const, onSelect: () => confirmDelete(item) }]
+    [{ label: 'Move to Trash', icon: 'i-lucide-trash-2', color: 'error' as const, onSelect: () => moveToTrash(item) }]
   ]
 }
 </script>

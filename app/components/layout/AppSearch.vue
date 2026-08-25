@@ -44,6 +44,9 @@ const groups = computed<CommandPaletteGroup<CommandPaletteItem>[]>(() => [
       { label: 'New Lead', icon: 'i-lucide-plus', to: '/admin/crm/leads?new=1' },
       { label: 'New Client', icon: 'i-lucide-plus', to: '/admin/clients?new=1' },
       { label: 'Upload Media', icon: 'i-lucide-upload', to: '/admin/media?upload=1' },
+      { label: 'Open Trash', icon: 'i-lucide-trash-2', to: '/admin/trash' },
+      { label: 'Open Audit Logs', icon: 'i-lucide-scroll-text', to: '/admin/security/audit-logs' },
+      { label: 'Open Security Center', icon: 'i-lucide-shield', to: '/admin/security' },
       {
         label: 'Toggle Dark Mode',
         icon: 'i-lucide-sun-moon',

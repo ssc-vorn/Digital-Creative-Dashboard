@@ -77,6 +77,7 @@ export const NAV_SECTIONS: NavSection[] = [
   {
     label: 'System',
     items: [
+      { label: 'Trash', icon: 'i-lucide-trash-2', to: '/admin/trash' },
       { label: 'Settings', icon: 'i-lucide-settings', to: '/admin/system/settings' },
       { label: 'Feature Flags', icon: 'i-lucide-toggle-right', to: '/admin/system/feature-flags' },
       { label: 'System Health', icon: 'i-lucide-activity', to: '/admin/system/health' }

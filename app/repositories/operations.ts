@@ -2,6 +2,7 @@ import type { CalendarEvent, MediaAsset, ReviewItem, TaskStatus, TeamMember, Wor
 import { mediaAssets, mediaFolders } from '~/mock-data/media'
 import { teamMembers } from '~/mock-data/team'
 import { calendarEvents, reviewItems, workTasks } from '~/mock-data/workflow'
+import { formatBytes } from '~/utils/format'
 import { createMockCrudRepository, simulateRequest } from './support'
 
 /* ------------------------------- Media -------------------------------- */
@@ -10,6 +11,12 @@ const mediaCrud = createMockCrudRepository<MediaAsset>({
   idPrefix: 'md',
   seed: mediaAssets,
   searchFields: ['filename', 'altText', 'tags', 'folder', 'uploadedBy'],
+  resourceType: 'media',
+  label: m => m.filename,
+  subtitle: m => `${m.folder} · ${formatBytes(m.size)}`,
+  location: m => `Media Library / ${m.folder}`,
+  dependencies: m => (m.usedIn.length ? [{ label: 'References', count: m.usedIn.length }] : []),
+  seedTrash: [{ item: mediaAssets[10]!, daysAgo: 4, deletedBy: 'Kenji Tanaka', reason: 'Duplicate upload' }],
   create: (input, id) => {
     const now = new Date().toISOString()
     return {
@@ -49,6 +56,10 @@ const teamCrud = createMockCrudRepository<TeamMember>({
   idPrefix: 'tm',
   seed: teamMembers,
   searchFields: ['name', 'role', 'department', 'skills'],
+  resourceType: 'team-member',
+  label: t => t.name,
+  subtitle: t => t.role,
+  location: () => 'Team',
   create: (input, id) => {
     const now = new Date().toISOString()
     const name = input.name ?? 'New teammate'
@@ -79,6 +90,11 @@ const taskCrud = createMockCrudRepository<WorkTask>({
   idPrefix: 'tk',
   seed: workTasks,
   searchFields: ['title', 'assigneeName', 'projectName', 'tags'],
+  resourceType: 'task',
+  label: t => t.title,
+  subtitle: t => t.projectName ?? 'Unassigned to a project',
+  location: () => 'Workflow / Tasks',
+  seedTrash: [{ item: workTasks[29]!, daysAgo: 9, deletedBy: 'Amara Diallo', reason: 'Offsite postponed to next quarter' }],
   create: (input, id) => {
     const now = new Date().toISOString()
     return {

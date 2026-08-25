@@ -16,10 +16,13 @@ const { data: service, status, error, load } = useResource<Service>(async () => 
 const form = ref<Service | null>(null)
 const snapshot = ref('')
 
+const lastSavedAt = ref<string | null>(null)
+
 watch(service, (value) => {
   if (value) {
     form.value = structuredClone(toRaw(value))
     snapshot.value = JSON.stringify(form.value)
+    lastSavedAt.value = value.updatedAt
   }
 }, { immediate: true })
 
@@ -27,7 +30,13 @@ const dirty = computed(() => Boolean(form.value) && JSON.stringify(form.value) !
 
 const save = useMutation(
   async () => (form.value ? serviceRepository.update(id.value, { ...form.value }) : null),
-  { success: 'Service saved', onSuccess: () => { snapshot.value = JSON.stringify(form.value) } }
+  {
+    success: 'Service saved',
+    onSuccess: (updated) => {
+      snapshot.value = JSON.stringify(form.value)
+      if (updated) lastSavedAt.value = updated.updatedAt
+    }
+  }
 )
 
 const transition = useMutation(
@@ -70,6 +79,8 @@ function addProcessStep() {
         :status="form.status"
         :saving="save.saving.value"
         :dirty="dirty"
+        :save-error="save.error.value"
+        :last-saved-at="lastSavedAt"
         :can-save="app.can('edit')"
         @save="save.run()"
       >

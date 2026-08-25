@@ -45,7 +45,11 @@ onMounted(() => {
 const publish = useMutation((id: string) => projectRepository.publish(id), { success: 'Project published', onSuccess: () => collection.reload() })
 const archive = useMutation((id: string) => projectRepository.archive(id), { success: 'Project archived', onSuccess: () => collection.reload() })
 const duplicate = useMutation((id: string) => projectRepository.duplicate(id), { success: 'Project duplicated', onSuccess: () => collection.reload() })
-const destroy = useMutation((id: string) => projectRepository.remove(id), { success: 'Project deleted', onSuccess: () => collection.reload() })
+const { moveToTrash } = useTrashAction(projectRepository, {
+  resourceLabel: 'Project',
+  itemName: p => p.title,
+  onDone: () => collection.reload()
+})
 
 async function bulkAction(action: 'publish' | 'archive', ids: string[], clear: () => void) {
   await Promise.all(ids.map(id => action === 'publish' ? projectRepository.publish(id) : projectRepository.archive(id)))
@@ -53,14 +57,18 @@ async function bulkAction(action: 'publish' | 'archive', ids: string[], clear: (
   collection.reload()
 }
 
-async function confirmDelete(project: Project) {
+async function bulkTrash(ids: string[], clear: () => void) {
+  const items = collection.items.value.filter(p => ids.includes(p.id))
   const ok = await confirm({
-    title: `Delete “${project.title}”?`,
-    description: 'The project and its content will be permanently removed.',
-    confirmLabel: 'Delete project',
+    title: `Move ${items.length} projects to Trash?`,
+    description: 'They can be restored later from Trash.',
+    confirmLabel: 'Move to Trash',
     danger: true
   })
-  if (ok) destroy.run(project.id)
+  if (!ok) return
+  await Promise.all(items.map(p => projectRepository.remove(p.id)))
+  clear()
+  collection.reload()
 }
 
 function rowActions(project: Project): DropdownMenuItem[][] {
@@ -74,12 +82,12 @@ function rowActions(project: Project): DropdownMenuItem[][] {
       ...(app.can('publish') && project.status !== 'published'
         ? [{ label: 'Publish', icon: 'i-lucide-send', onSelect: () => publish.run(project.id) }]
         : []),
-      ...(project.status !== 'archived'
-        ? [{ label: 'Archive', icon: 'i-lucide-archive', onSelect: () => archive.run(project.id) }]
-        : [])
+      ...(project.status === 'archived'
+        ? [{ label: 'Restore from Archive', icon: 'i-lucide-archive-restore', onSelect: () => projectRepository.update(project.id, { status: 'draft' }).then(() => collection.reload()) }]
+        : [{ label: 'Archive', icon: 'i-lucide-archive', onSelect: () => archive.run(project.id) }])
     ],
     [
-      { label: 'Delete', icon: 'i-lucide-trash-2', color: 'error' as const, onSelect: () => confirmDelete(project) }
+      { label: 'Move to Trash', icon: 'i-lucide-trash-2', color: 'error' as const, onSelect: () => moveToTrash(project) }
     ]
   ]
 }
@@ -216,6 +224,14 @@ function rowActions(project: Project): DropdownMenuItem[][] {
             color="neutral"
             variant="soft"
             @click="bulkAction('archive', selected, clear)"
+          />
+          <UButton
+            v-if="app.can('delete')"
+            label="Move to Trash"
+            size="xs"
+            color="error"
+            variant="soft"
+            @click="bulkTrash(selected, clear)"
           />
         </template>
         <template #empty-actions>

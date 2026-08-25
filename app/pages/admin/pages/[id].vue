@@ -16,12 +16,16 @@ const { data: page, status, error, load } = useResource<SitePage>(async () => {
 const form = ref<SitePage | null>(null)
 const snapshot = ref('')
 const selectedId = ref<string | null>(null)
+const lastSavedAt = ref<string | null>(null)
 
 watch(page, (value) => {
   if (value) {
     form.value = structuredClone(toRaw(value))
     snapshot.value = JSON.stringify(form.value)
     selectedId.value = form.value.blocks[0]?.id ?? null
+    lastSavedAt.value = value.updatedAt
+    history.value = [JSON.stringify(form.value.blocks)]
+    historyIndex.value = 0
   }
 }, { immediate: true })
 
@@ -32,9 +36,45 @@ const save = useMutation(
   async () => (form.value ? pageRepository.update(id.value, { ...form.value }) : null),
   {
     success: 'Page saved',
-    onSuccess: () => { snapshot.value = JSON.stringify(form.value) }
+    onSuccess: (updated) => {
+      snapshot.value = JSON.stringify(form.value)
+      if (updated) lastSavedAt.value = updated.updatedAt
+    }
   }
 )
+
+/* ------------------------- Undo / redo history --------------------------- */
+
+const history = ref<string[]>([])
+const historyIndex = ref(0)
+
+function pushHistory() {
+  if (!form.value) return
+  const state = JSON.stringify(form.value.blocks)
+  if (history.value[historyIndex.value] === state) return
+  history.value = [...history.value.slice(0, historyIndex.value + 1), state].slice(-40)
+  historyIndex.value = history.value.length - 1
+}
+
+const canUndo = computed(() => historyIndex.value > 0)
+const canRedo = computed(() => historyIndex.value < history.value.length - 1)
+
+function undo() {
+  if (!canUndo.value || !form.value) return
+  historyIndex.value -= 1
+  form.value.blocks = JSON.parse(history.value[historyIndex.value]!) as PageBlock[]
+}
+
+function redo() {
+  if (!canRedo.value || !form.value) return
+  historyIndex.value += 1
+  form.value.blocks = JSON.parse(history.value[historyIndex.value]!) as PageBlock[]
+}
+
+defineShortcuts({
+  meta_z: undo,
+  'meta_shift_z': redo
+})
 
 const transition = useMutation(
   (next: ContentStatus) => pageRepository.update(id.value, { status: next }),
@@ -77,6 +117,7 @@ function addBlock(type: string) {
   form.value.blocks.push(block)
   selectedId.value = block.id
   libraryOpen.value = false
+  pushHistory()
 }
 
 /* ------------------------------ Block ops ------------------------------- */
@@ -94,6 +135,7 @@ function moveBlock(blockId: string, direction: -1 | 1) {
   const [moved] = blocks.splice(index, 1)
   blocks.splice(target, 0, moved!)
   form.value.blocks = blocks
+  pushHistory()
 }
 
 function duplicateBlock(blockId: string) {
@@ -104,6 +146,7 @@ function duplicateBlock(blockId: string) {
   const copy = { ...structuredClone(toRaw(source)), id: `pb_copy_${Date.now()}`, locked: false }
   form.value.blocks.splice(index + 1, 0, copy)
   selectedId.value = copy.id
+  pushHistory()
 }
 
 function deleteBlock(blockId: string) {
@@ -112,6 +155,7 @@ function deleteBlock(blockId: string) {
   if (index === -1 || form.value.blocks[index]!.locked) return
   form.value.blocks.splice(index, 1)
   if (selectedId.value === blockId) selectedId.value = form.value.blocks[0]?.id ?? null
+  pushHistory()
 }
 
 const dragIndex = ref<number | null>(null)
@@ -126,6 +170,7 @@ function onDrop(index: number) {
   blocks.splice(index, 0, moved!)
   form.value.blocks = blocks
   dragIndex.value = null
+  pushHistory()
 }
 
 const CATEGORY_ICON: Record<PageBlockCategory, string> = {
@@ -155,10 +200,18 @@ const CATEGORY_ICON: Record<PageBlockCategory, string> = {
         :status="form.status"
         :saving="save.saving.value"
         :dirty="dirty"
+        :save-error="save.error.value"
+        :last-saved-at="lastSavedAt"
         :can-save="app.can('edit')"
         @save="save.run()"
       >
         <template #actions>
+          <UTooltip text="Undo" :kbds="['meta', 'Z']">
+            <UButton icon="i-lucide-undo-2" color="neutral" variant="ghost" :disabled="!canUndo" aria-label="Undo" @click="undo" />
+          </UTooltip>
+          <UTooltip text="Redo" :kbds="['meta', 'shift', 'Z']">
+            <UButton icon="i-lucide-redo-2" color="neutral" variant="ghost" :disabled="!canRedo" aria-label="Redo" @click="redo" />
+          </UTooltip>
           <UButton label="Add block" icon="i-lucide-plus" color="neutral" variant="outline" @click="libraryOpen = true" />
         </template>
 
@@ -229,10 +282,10 @@ const CATEGORY_ICON: Record<PageBlockCategory, string> = {
 
             <template v-else>
               <UFormField label="Label">
-                <UInput v-model="selected.label" :disabled="selected.locked" class="w-full" />
+                <UInput v-model="selected.label" :disabled="selected.locked" class="w-full" @change="pushHistory" />
               </UFormField>
               <UFormField label="Content">
-                <UTextarea v-model="selected.content" :rows="4" :disabled="selected.locked" class="w-full" />
+                <UTextarea v-model="selected.content" :rows="4" :disabled="selected.locked" class="w-full" @change="pushHistory" />
               </UFormField>
 
               <div class="grid grid-cols-2 gap-2">

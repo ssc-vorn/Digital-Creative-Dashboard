@@ -4,24 +4,29 @@ import { users } from './access'
 
 const rng = createRng(9091)
 
-const AUDIT_ACTIONS: [action: string, resourceType: string, resources: string[]][] = [
-  ['Published', 'Project', ['Verdana Hotels Rebrand', 'Meridian Digital Collection', 'Solstice DTC Storefront']],
+const AUDIT_ACTIONS: [action: string, resourceType: string, resources: string[], before?: string, after?: string][] = [
+  ['Published', 'Project', ['Verdana Hotels Rebrand', 'Meridian Digital Collection', 'Solstice DTC Storefront'], 'Approved', 'Published'],
   ['Updated', 'Blog Post', ['Nuxt 4 in production: lessons from five launches', 'Designing for dark mode from day one']],
   ['Created', 'Lead', ['Elena Fischer — Aurora Skin Clinic', 'Marcus Webb — Tandem Cycles']],
-  ['Changed role for', 'User', ['Felix Wagner', 'Clara Novak']],
-  ['Deleted', 'Media Asset', ['old-hero-draft.jpg', 'unused-banner.png']],
+  ['Changed role for', 'User', ['Felix Wagner', 'Clara Novak'], 'Designer', 'Developer'],
+  ['Moved to Trash', 'Media Asset', ['old-hero-draft.jpg', 'unused-banner.png']],
   ['Logged in', 'Session', ['Admin console']],
   ['Updated', 'Settings', ['Branding', 'Localization', 'Integrations']],
-  ['Approved', 'Case Study', ['Atlas Outdoor Commerce Platform: the full story']],
-  ['Scheduled', 'Blog Post', ['Measuring brand: metrics beyond the logo']],
+  ['Approved', 'Case Study', ['Atlas Outdoor Commerce Platform: the full story'], 'In Review', 'Approved'],
+  ['Scheduled', 'Blog Post', ['Measuring brand: metrics beyond the logo'], 'Approved', 'Scheduled'],
   ['Exported', 'Analytics Report', ['Q3 website overview']],
   ['Invited', 'User', ['kenji.tanaka@northshore.studio']],
-  ['Archived', 'Project', ['Kinfolk Brand Refresh']],
-  ['Toggled', 'Feature Flag', ['client-portal', 'ai-assistant']]
+  ['Archived', 'Project', ['Kinfolk Brand Refresh'], 'Published', 'Archived'],
+  ['Toggled', 'Feature Flag', ['client-portal', 'ai-assistant']],
+  ['Restored', 'Project', ['Northwind Booking Concept'], 'Trashed', 'Draft'],
+  ['Suspended', 'User', ['Oliver Bennett'], 'Active', 'Suspended']
 ]
 
+const AUDIT_DEVICES = ['MacBook Pro · macOS 15', 'iPhone 16 · iOS 19', 'ThinkPad X1 · Windows 11', 'iPad Pro · iPadOS 19', 'Pixel 10 · Android 16'] as const
+const AUDIT_BROWSERS = ['Safari 19', 'Chrome 132', 'Firefox 128', 'Edge 132', 'Arc 1.42'] as const
+
 export const auditLogs: AuditLog[] = Array.from({ length: 50 }, (_, i): AuditLog => {
-  const [action, resourceType, resources] = AUDIT_ACTIONS[i % AUDIT_ACTIONS.length]!
+  const [action, resourceType, resources, before, after] = AUDIT_ACTIONS[i % AUDIT_ACTIONS.length]!
   const user = users[(i * 3) % users.length]!
   return {
     id: `al_${(i + 1).toString().padStart(2, '0')}`,
@@ -32,7 +37,11 @@ export const auditLogs: AuditLog[] = Array.from({ length: 50 }, (_, i): AuditLog
     resourceName: pick(rng, resources),
     date: daysAgo(between(rng, 0, 30), between(rng, 0, 20)),
     ip: `82.132.${between(rng, 1, 254)}.${between(rng, 1, 254)}`,
-    result: rng() > 0.06 ? 'success' : 'failure'
+    device: pick(rng, AUDIT_DEVICES),
+    browser: pick(rng, AUDIT_BROWSERS),
+    result: rng() > 0.06 ? 'success' : 'failure',
+    before,
+    after
   }
 }).sort((a, b) => b.date.localeCompare(a.date))
 
@@ -88,17 +97,18 @@ export const featureFlags: FeatureFlag[] = [
 
 function history(status: ServiceHealth): ServiceHealth[] {
   const h: ServiceHealth[] = Array.from({ length: 24 }, () => 'operational' as ServiceHealth)
+  if (status === 'degraded') { h[19] = 'degraded'; h[21] = 'degraded'; h[23] = 'degraded' }
   if (status === 'warning') { h[20] = 'warning'; h[21] = 'warning'; h[23] = 'warning' }
   if (status === 'offline') { h[22] = 'warning'; h[23] = 'offline' }
   return h
 }
 
 export const systemServices: SystemService[] = [
-  { id: 'sys_01', name: 'Frontend', description: 'Nuxt application and CDN edge', status: 'operational', uptime: 99.98, latencyMs: 42, history: history('operational') },
-  { id: 'sys_02', name: 'API', description: 'Laravel application servers', status: 'operational', uptime: 99.95, latencyMs: 118, history: history('operational') },
-  { id: 'sys_03', name: 'Database', description: 'PostgreSQL primary + replicas', status: 'operational', uptime: 99.99, latencyMs: 12, history: history('operational') },
-  { id: 'sys_04', name: 'Storage', description: 'Object storage for media assets', status: 'warning', uptime: 99.72, latencyMs: 240, history: history('warning') },
-  { id: 'sys_05', name: 'Realtime', description: 'Supabase Realtime channels', status: 'operational', uptime: 99.9, latencyMs: 88, history: history('operational') },
-  { id: 'sys_06', name: 'Cache', description: 'Redis cache cluster', status: 'operational', uptime: 99.97, latencyMs: 4, history: history('operational') },
-  { id: 'sys_07', name: 'Queue', description: 'Background jobs and email delivery', status: 'operational', uptime: 99.93, latencyMs: 65, history: history('operational') }
+  { id: 'sys_01', name: 'Frontend', description: 'Nuxt application and CDN edge', status: 'operational', uptime: 99.98, latencyMs: 42, lastCheckedAt: daysAgo(0, 0.02), history: history('operational') },
+  { id: 'sys_02', name: 'API', description: 'Laravel application servers', status: 'operational', uptime: 99.95, latencyMs: 118, lastCheckedAt: daysAgo(0, 0.02), history: history('operational') },
+  { id: 'sys_03', name: 'Database', description: 'PostgreSQL primary + replicas', status: 'operational', uptime: 99.99, latencyMs: 12, lastCheckedAt: daysAgo(0, 0.02), history: history('operational') },
+  { id: 'sys_04', name: 'Storage', description: 'Object storage for media assets', status: 'warning', uptime: 99.72, latencyMs: 240, lastCheckedAt: daysAgo(0, 0.02), history: history('warning') },
+  { id: 'sys_05', name: 'Realtime', description: 'Supabase Realtime channels', status: 'operational', uptime: 99.9, latencyMs: 88, lastCheckedAt: daysAgo(0, 0.02), history: history('operational') },
+  { id: 'sys_06', name: 'Cache', description: 'Redis cache cluster', status: 'operational', uptime: 99.97, latencyMs: 4, lastCheckedAt: daysAgo(0, 0.02), history: history('operational') },
+  { id: 'sys_07', name: 'Queue', description: 'Background jobs and email delivery', status: 'degraded', uptime: 99.93, latencyMs: 340, lastCheckedAt: daysAgo(0, 0.02), history: history('degraded') }
 ]

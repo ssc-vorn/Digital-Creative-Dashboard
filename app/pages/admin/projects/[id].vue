@@ -1,6 +1,8 @@
 <script setup lang="ts">
-import type { ContentStatus, Project } from '~/types'
+import { watchDebounced } from '@vueuse/core'
+import type { ActivityEvent, ContentStatus, Project } from '~/types'
 import { projectRepository } from '~/repositories/projects'
+import { activityRepository, baseLifecycleEvents } from '~/repositories/activity'
 import { useAppStore } from '~/stores/app'
 
 const route = useRoute()
@@ -17,14 +19,46 @@ const { data: project, status, error, load } = useResource<Project>(async () => 
 const form = ref<Project | null>(null)
 const snapshot = ref('')
 
+const lastSavedAt = ref<string | null>(null)
+const draftRecovery = useDraftRecovery<Project>(id.value)
+
+const activityEvents = ref<ActivityEvent[]>([])
+const activityStatus = ref<'idle' | 'loading' | 'loaded' | 'error'>('idle')
+
+async function loadActivity() {
+  if (!form.value) return
+  activityStatus.value = 'loading'
+  try {
+    activityEvents.value = await activityRepository.list(form.value.title, baseLifecycleEvents(form.value, app.currentUser.name))
+    activityStatus.value = 'loaded'
+  } catch {
+    activityStatus.value = 'error'
+  }
+}
+
+const activity = { data: activityEvents, status: activityStatus, load: loadActivity }
+
 watch(project, (value) => {
   if (value) {
     form.value = structuredClone(toRaw(value))
     snapshot.value = JSON.stringify(form.value)
+    lastSavedAt.value = value.updatedAt
+    draftRecovery.checkFor(form.value)
+    loadActivity()
   }
 }, { immediate: true })
 
 const dirty = computed(() => Boolean(form.value) && JSON.stringify(form.value) !== snapshot.value)
+
+// Mirror the working copy into a local draft as the author types.
+watchDebounced(form, () => {
+  if (form.value && dirty.value) draftRecovery.persist(form.value)
+}, { debounce: 1000, deep: true })
+
+function restoreDraft() {
+  if (draftRecovery.recoveredDraft.value) form.value = draftRecovery.recoveredDraft.value
+  draftRecovery.discard()
+}
 
 const save = useMutation(
   async () => {
@@ -37,6 +71,8 @@ const save = useMutation(
       if (updated) {
         form.value = structuredClone(toRaw(updated))
         snapshot.value = JSON.stringify(form.value)
+        lastSavedAt.value = updated.updatedAt
+        draftRecovery.clear()
       }
     }
   }
@@ -92,9 +128,13 @@ function removeResult(index: number) {
         :status="form.status"
         :saving="save.saving.value"
         :dirty="dirty"
+        :save-error="save.error.value"
+        :last-saved-at="lastSavedAt"
         :can-save="app.can('edit')"
         @save="save.run()"
       >
+        <EditorsDraftRecoveryBanner v-if="draftRecovery.recoverable.value" @discard="draftRecovery.discard()" @restore="restoreDraft" />
+
         <!-- Basic information -->
         <UCard :ui="{ body: 'space-y-4' }">
           <template #header>
@@ -201,7 +241,19 @@ function removeResult(index: number) {
           </div>
         </UCard>
 
-        <EditorsRevisionHistory :fetcher="() => projectRepository.revisions(id)" />
+        <EditorsRevisionHistory
+          :fetcher="() => projectRepository.revisions(id)"
+          :on-restore="(v: number) => projectRepository.restoreVersion(id, v)"
+        />
+
+        <CommonCommentThread resource-type="project" :resource-id="id" />
+
+        <UCard>
+          <template #header>
+            <h2 class="type-h3">Activity</h2>
+          </template>
+          <CommonActivityTimeline :events="activity.data.value ?? []" :status="activity.status.value" @retry="activity.load" />
+        </UCard>
 
         <template #aside>
           <EditorsPublishPanel

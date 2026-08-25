@@ -46,19 +46,30 @@ const saveDetail = useMutation(
   { success: 'Asset updated', onSuccess: () => collection.reload() }
 )
 
-const destroy = useMutation(
-  async (ids: string[]) => { await Promise.all(ids.map(id => mediaRepository.remove(id))) },
-  { success: 'Deleted', onSuccess: () => { selectedIds.value = []; detailAsset.value = null; collection.reload() } }
-)
-
 async function confirmDelete(ids: string[]) {
+  const dependencyCounts = ids.reduce((sum, id) => sum + mediaRepository.previewDependencies(id).length, 0)
   const ok = await confirm({
-    title: ids.length === 1 ? 'Delete this asset?' : `Delete ${ids.length} assets?`,
-    description: 'Deleted assets are removed from the library. Content using them will show a broken reference.',
-    confirmLabel: 'Delete',
+    title: ids.length === 1 ? 'Move asset to Trash?' : `Move ${ids.length} assets to Trash?`,
+    description: `${ids.length === 1 ? 'It' : 'They'} will be moved to Trash and can be restored later.${dependencyCounts > 0 ? ' Some assets are referenced by existing content.' : ''}`,
+    confirmLabel: 'Move to Trash',
     danger: true
   })
-  if (ok) destroy.run(ids)
+  if (!ok) return
+  await Promise.all(ids.map(id => mediaRepository.remove(id)))
+  toast.add({
+    title: ids.length === 1 ? 'Asset moved to Trash' : `${ids.length} assets moved to Trash`,
+    icon: 'i-lucide-trash-2',
+    color: 'success',
+    actions: [{
+      label: 'Undo',
+      color: 'neutral',
+      variant: 'outline',
+      onClick: async () => { await Promise.all(ids.map(id => mediaRepository.restore(id))); collection.reload() }
+    }]
+  })
+  selectedIds.value = []
+  detailAsset.value = null
+  collection.reload()
 }
 
 function toggleSelect(id: string) {
@@ -135,7 +146,7 @@ async function simulateUpload(files: File[] | FileList | null | undefined) {
       <div v-if="selectedIds.length > 0" class="flex items-center gap-3 rounded-lg border border-accented bg-elevated/60 px-3 py-2">
         <p class="text-sm font-medium text-highlighted">{{ selectedIds.length }} selected</p>
         <div class="ms-auto flex gap-1.5">
-          <UButton label="Delete" size="xs" color="error" variant="soft" icon="i-lucide-trash-2" @click="confirmDelete(selectedIds)" />
+          <UButton label="Move to Trash" size="xs" color="error" variant="soft" icon="i-lucide-trash-2" @click="confirmDelete(selectedIds)" />
           <UButton label="Clear" size="xs" color="neutral" variant="ghost" @click="selectedIds = []" />
         </div>
       </div>
@@ -274,7 +285,7 @@ async function simulateUpload(files: File[] | FileList | null | undefined) {
       </template>
       <template #footer>
         <div v-if="detailAsset" class="flex w-full items-center justify-between gap-2">
-          <UButton label="Delete" color="error" variant="soft" icon="i-lucide-trash-2" @click="confirmDelete([detailAsset.id])" />
+          <UButton label="Move to Trash" color="error" variant="soft" icon="i-lucide-trash-2" @click="confirmDelete([detailAsset.id])" />
           <UButton label="Save changes" icon="i-lucide-save" :loading="saveDetail.saving.value" @click="saveDetail.run(detailAsset)" />
         </div>
       </template>

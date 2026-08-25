@@ -29,6 +29,12 @@ const create = useMutation(
 onMounted(() => {
   if (route.query.new) createOpen.value = true
 })
+
+const { moveToTrash } = useTrashAction(clientRepository, {
+  resourceLabel: 'Client',
+  itemName: c => c.company,
+  onDone: () => collection.reload()
+})
 </script>
 
 <template>
@@ -52,13 +58,16 @@ onMounted(() => {
 
       <div v-else class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
         <UCard v-for="client in collection.items.value" :key="client.id" class="group">
-          <NuxtLink :to="`/admin/clients/${client.id}`" class="block focus-visible:outline-primary">
-            <div class="flex items-start justify-between gap-2">
-              <span class="flex size-11 items-center justify-center rounded-lg text-sm font-semibold text-white" :style="{ backgroundColor: client.logoColor }">
-                {{ client.initials }}
-              </span>
+          <div class="flex items-start justify-between gap-2">
+            <span class="flex size-11 items-center justify-center rounded-lg text-sm font-semibold text-white" :style="{ backgroundColor: client.logoColor }">
+              {{ client.initials }}
+            </span>
+            <div class="flex items-center gap-1">
               <CommonStatusBadge :status="client.status" />
+              <CommonRowActionsMenu :items="[[{ label: 'Move to Trash', icon: 'i-lucide-trash-2', color: 'error', onSelect: () => moveToTrash(client) }]]" />
             </div>
+          </div>
+          <NuxtLink :to="`/admin/clients/${client.id}`" class="block focus-visible:outline-primary">
             <h3 class="mt-3 font-medium text-highlighted transition-colors group-hover:text-primary">{{ client.company }}</h3>
             <p class="text-xs text-muted">{{ client.industry }} · {{ client.location }}</p>
             <dl class="mt-4 grid grid-cols-3 gap-2 border-t border-default pt-3 text-center">

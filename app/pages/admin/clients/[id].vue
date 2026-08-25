@@ -1,8 +1,9 @@
 <script setup lang="ts">
-import type { Client, Contact, Project, WorkTask } from '~/types'
+import type { ActivityEvent, Client, Contact, Project, WorkTask } from '~/types'
 import { clientRepository, contactRepository } from '~/repositories/crm'
 import { projectRepository } from '~/repositories/projects'
 import { taskRepository } from '~/repositories/operations'
+import { activityRepository, baseLifecycleEvents } from '~/repositories/activity'
 
 const route = useRoute()
 const id = computed(() => String(route.params.id))
@@ -31,8 +32,25 @@ const tabs = [
   { label: 'Overview', value: 'overview', icon: 'i-lucide-layout-dashboard' },
   { label: 'Contacts', value: 'contacts', icon: 'i-lucide-contact' },
   { label: 'Projects', value: 'projects', icon: 'i-lucide-folder-open' },
-  { label: 'Tasks', value: 'tasks', icon: 'i-lucide-list-todo' }
+  { label: 'Tasks', value: 'tasks', icon: 'i-lucide-list-todo' },
+  { label: 'Activity', value: 'activity', icon: 'i-lucide-activity' }
 ]
+
+const activityEvents = ref<ActivityEvent[]>([])
+const activityStatus = ref<'idle' | 'loading' | 'loaded' | 'error'>('idle')
+
+async function loadActivity() {
+  if (!client.value) return
+  activityStatus.value = 'loading'
+  try {
+    activityEvents.value = await activityRepository.list(client.value.company, baseLifecycleEvents(client.value, client.value.ownerName))
+    activityStatus.value = 'loaded'
+  } catch {
+    activityStatus.value = 'error'
+  }
+}
+
+watch(client, (value) => { if (value) loadActivity() })
 </script>
 
 <template>
@@ -138,6 +156,14 @@ const tabs = [
             </li>
           </ul>
         </div>
+
+        <!-- Activity -->
+        <UCard v-else-if="tab === 'activity'">
+          <template #header>
+            <h2 class="type-h3">Activity</h2>
+          </template>
+          <CommonActivityTimeline :events="activityEvents" :status="activityStatus" @retry="loadActivity" />
+        </UCard>
       </template>
     </div>
   </LayoutAdminPage>

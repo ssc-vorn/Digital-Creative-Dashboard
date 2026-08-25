@@ -1,4 +1,4 @@
-import type { Client, Contact, Lead, LeadActivity, LeadStage } from '~/types'
+import type { Client, Contact, DependencyWarning, Lead, LeadActivity, LeadStage } from '~/types'
 import { leads } from '~/mock-data/leads'
 import { clients, contacts } from '~/mock-data/clients'
 import { createMockCrudRepository, simulateRequest } from './support'
@@ -7,6 +7,11 @@ const leadCrud = createMockCrudRepository<Lead>({
   idPrefix: 'ld',
   seed: leads,
   searchFields: ['name', 'company', 'email', 'service', 'source'],
+  resourceType: 'lead',
+  label: l => `${l.name} · ${l.company}`,
+  subtitle: l => l.service,
+  location: () => 'CRM / Leads',
+  seedTrash: [{ item: leads[19]!, daysAgo: 15, deletedBy: 'Zainab Hussein', reason: 'Duplicate enquiry' }],
   create: (input, id) => {
     const now = new Date().toISOString()
     return {
@@ -85,6 +90,17 @@ const clientCrud = createMockCrudRepository<Client>({
   idPrefix: 'cl',
   seed: clients,
   searchFields: ['company', 'industry', 'location', 'ownerName'],
+  resourceType: 'client',
+  label: c => c.company,
+  subtitle: c => c.industry,
+  location: () => 'CRM / Clients',
+  dependencies: (c) => {
+    const warnings: DependencyWarning[] = []
+    if (c.projectsTotal) warnings.push({ label: 'Projects', count: c.projectsTotal })
+    const contactCount = contactCrud.all().filter(ct => ct.clientId === c.id).length
+    if (contactCount) warnings.push({ label: 'Contacts', count: contactCount })
+    return warnings
+  },
   create: (input, id) => {
     const now = new Date().toISOString()
     const company = input.company ?? 'New client'
@@ -116,6 +132,10 @@ const contactCrud = createMockCrudRepository<Contact>({
   idPrefix: 'ct',
   seed: contacts,
   searchFields: ['name', 'role', 'email', 'clientName'],
+  resourceType: 'contact',
+  label: c => c.name,
+  subtitle: c => `${c.role} · ${c.clientName}`,
+  location: () => 'CRM / Contacts',
   create: (input, id) => {
     const now = new Date().toISOString()
     return {

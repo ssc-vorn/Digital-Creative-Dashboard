@@ -3,10 +3,10 @@ import { caseStudies } from '~/mock-data/case-studies'
 import { blogPosts } from '~/mock-data/blog'
 import { services } from '~/mock-data/services'
 import { PAGE_BLOCK_LIBRARY, sitePages } from '~/mock-data/pages'
-import { revisionsFor } from '~/mock-data/workflow'
 import { makeSeo } from '~/mock-data/shared'
 import { slugify } from '~/utils/format'
-import { createMockCrudRepository, simulateRequest } from './support'
+import { createMockCrudRepository } from './support'
+import { blogVersionRepository, caseStudyVersionRepository } from './versions'
 
 /* ---------------------------- Case studies ---------------------------- */
 
@@ -14,6 +14,10 @@ const caseStudyCrud = createMockCrudRepository<CaseStudy>({
   idPrefix: 'cs',
   seed: caseStudies,
   searchFields: ['title', 'clientName', 'excerpt'],
+  resourceType: 'case-study',
+  label: c => c.title,
+  subtitle: c => c.clientName,
+  location: () => 'Case Studies',
   create: (input, id) => {
     const title = input.title ?? 'Untitled case study'
     const now = new Date().toISOString()
@@ -46,9 +50,12 @@ export const caseStudyRepository = {
     return caseStudyCrud.create({ ...structuredClone(source), title: `${source.title} (copy)`, status: 'draft' } as Partial<CaseStudy>)
   },
   async revisions(id: string): Promise<Revision[]> {
-    await simulateRequest()
     const item = caseStudyCrud.all().find(c => c.id === id)
-    return revisionsFor(Number.parseInt(id.replace(/\D/g, ''), 10) + 40, item?.status ?? 'draft')
+    return caseStudyVersionRepository.getVersions(id, item?.status ?? 'draft')
+  },
+  async restoreVersion(id: string, version: number): Promise<Revision> {
+    const item = caseStudyCrud.all().find(c => c.id === id)
+    return caseStudyVersionRepository.restoreVersion(id, version, item?.status ?? 'draft')
   }
 }
 
@@ -58,6 +65,11 @@ const blogCrud = createMockCrudRepository<BlogPost>({
   idPrefix: 'bp',
   seed: blogPosts,
   searchFields: ['title', 'excerpt', 'authorName', 'category', 'tags'],
+  resourceType: 'blog-post',
+  label: b => b.title,
+  subtitle: b => `${b.category} · ${b.authorName}`,
+  location: b => `Blog / ${b.category}`,
+  seedTrash: [{ item: blogPosts[18]!, daysAgo: 11, deletedBy: 'Priya Raghavan', reason: 'Pricing philosophy is being rewritten' }],
   create: (input, id) => {
     const title = input.title ?? 'Untitled post'
     const now = new Date().toISOString()
@@ -94,9 +106,12 @@ export const blogRepository = {
     return blogCrud.update(id, { status: 'scheduled', scheduledFor: date })
   },
   async revisions(id: string): Promise<Revision[]> {
-    await simulateRequest()
     const item = blogCrud.all().find(c => c.id === id)
-    return revisionsFor(Number.parseInt(id.replace(/\D/g, ''), 10) + 80, item?.status ?? 'draft')
+    return blogVersionRepository.getVersions(id, item?.status ?? 'draft')
+  },
+  async restoreVersion(id: string, version: number): Promise<Revision> {
+    const item = blogCrud.all().find(c => c.id === id)
+    return blogVersionRepository.restoreVersion(id, version, item?.status ?? 'draft')
   }
 }
 
@@ -106,6 +121,10 @@ const serviceCrud = createMockCrudRepository<Service>({
   idPrefix: 'sv',
   seed: services,
   searchFields: ['title', 'description'],
+  resourceType: 'service',
+  label: s => s.title,
+  subtitle: s => s.description,
+  location: () => 'Services',
   create: (input, id) => {
     const title = input.title ?? 'Untitled service'
     const now = new Date().toISOString()
@@ -137,6 +156,10 @@ const pageCrud = createMockCrudRepository<SitePage>({
   idPrefix: 'pg',
   seed: sitePages,
   searchFields: ['title', 'slug'],
+  resourceType: 'page',
+  label: p => p.title,
+  subtitle: p => `/${p.slug}`,
+  location: () => 'Pages',
   create: (input, id) => {
     const title = input.title ?? 'Untitled page'
     const now = new Date().toISOString()

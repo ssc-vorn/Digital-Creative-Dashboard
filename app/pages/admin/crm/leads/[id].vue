@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { Lead, LeadStage, TeamMember } from '~/types'
+import type { ActivityEvent, ActivityEventType, Lead, LeadStage, TeamMember } from '~/types'
 import { leadRepository } from '~/repositories/crm'
 import { teamRepository } from '~/repositories/operations'
 import { useAppStore } from '~/stores/app'
@@ -42,16 +42,26 @@ const addNote = useMutation(
   { success: 'Note added', onSuccess: (updated) => { lead.value = updated; noteDraft.value = '' } }
 )
 
-const ACTIVITY_ICON: Record<string, string> = {
-  'form-submitted': 'i-lucide-inbox',
-  'assigned': 'i-lucide-user-check',
-  'email-sent': 'i-lucide-mail',
-  'note-added': 'i-lucide-sticky-note',
-  'status-changed': 'i-lucide-git-commit-horizontal',
-  'proposal-sent': 'i-lucide-file-text',
-  'follow-up': 'i-lucide-bell',
-  'call': 'i-lucide-phone'
+const LEAD_ACTIVITY_TYPE: Record<string, ActivityEventType> = {
+  'form-submitted': 'created',
+  'assigned': 'assigned',
+  'email-sent': 'updated',
+  'note-added': 'commented',
+  'status-changed': 'status-changed',
+  'proposal-sent': 'updated',
+  'follow-up': 'updated',
+  'call': 'updated'
 }
+
+const activityEvents = computed<ActivityEvent[]>(() =>
+  (lead.value?.activities ?? []).map(a => ({
+    id: a.id,
+    type: LEAD_ACTIVITY_TYPE[a.type] ?? 'updated',
+    actor: a.actor,
+    summary: a.summary,
+    date: a.date
+  }))
+)
 </script>
 
 <template>
@@ -121,18 +131,10 @@ const ACTIVITY_ICON: Record<string, string> = {
               <template #header>
                 <h2 class="type-h3">Activity</h2>
               </template>
-              <ol role="list" class="relative space-y-5 before:absolute before:inset-y-1 before:left-[15px] before:w-px before:bg-border">
-                <li v-for="activity in lead.activities" :key="activity.id" class="relative flex gap-3">
-                  <span class="z-10 flex size-8 shrink-0 items-center justify-center rounded-full border border-default bg-default">
-                    <UIcon :name="ACTIVITY_ICON[activity.type] ?? 'i-lucide-circle'" class="size-3.5 text-muted" />
-                  </span>
-                  <div class="min-w-0 pt-1">
-                    <p class="text-sm text-default">{{ activity.summary }}</p>
-                    <p class="text-xs text-dimmed">{{ activity.actor }} · {{ relativeTime(activity.date) }}</p>
-                  </div>
-                </li>
-              </ol>
+              <CommonActivityTimeline :events="activityEvents" />
             </UCard>
+
+            <CommonCommentThread resource-type="lead" :resource-id="id" />
           </div>
 
           <div class="space-y-6">

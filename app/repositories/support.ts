@@ -1,4 +1,5 @@
-import type { ListQuery, Paginated } from '~/types'
+import type { DependencyWarning, ListQuery, Paginated, TrashMeta, TrashedItem } from '~/types'
+import { useAppStore } from '~/stores/app'
 
 /**
  * Behaviour knobs for the mock layer. The Settings → Advanced screen exposes
@@ -10,7 +11,9 @@ export const mockConfig = {
   /** 0–1 probability that a mutation fails with a simulated server error. */
   failureRate: 0,
   /** When set, the next call fails with this error kind, then resets. */
-  nextError: null as MockErrorKind | null
+  nextError: null as MockErrorKind | null,
+  /** Default trash retention window; captured on each item at delete time. */
+  trashRetentionDays: 30
 }
 
 export type MockErrorKind = 'network' | 'validation' | 'permission' | 'server' | 'timeout'
@@ -104,7 +107,15 @@ export interface CrudRepository<T extends { id: string }, TCreate = Partial<T>> 
   get(id: string): Promise<T | null>
   create(input: TCreate): Promise<T>
   update(id: string, patch: Partial<T>): Promise<T>
-  remove(id: string): Promise<void>
+  /** Soft delete — moves the item to this repository's trash. */
+  remove(id: string, reason?: string): Promise<void>
+  /** Data-safety extensions (soft delete / trash). */
+  resourceType: string
+  listTrash(): Promise<TrashedItem<T>[]>
+  restore(id: string): Promise<T>
+  permanentlyDelete(id: string): Promise<void>
+  /** Synchronous, no-latency dependency check used to warn before a destructive action. */
+  previewDependencies(id: string): DependencyWarning[]
 }
 
 let createdCounter = 0
@@ -114,14 +125,43 @@ export function createMockCrudRepository<T extends { id: string }>(options: {
   seed: T[]
   searchFields: string[]
   create: (input: Partial<T>, id: string) => T
+  /** Data-safety metadata — resourceType is required so trash entries can be identified centrally. */
+  resourceType: string
+  label: (item: T) => string
+  subtitle?: (item: T) => string
+  location?: (item: T) => string
+  dependencies?: (item: T) => DependencyWarning[]
+  /** Pre-seeded trash entries, so the Trash screen has realistic content on first load. */
+  seedTrash?: { item: T, daysAgo: number, deletedBy: string, reason?: string }[]
 }): CrudRepository<T> & { all(): T[] } {
   // Clone the seed so module-level mock data is never mutated by the UI session.
   const store: T[] = options.seed.map(item => structuredClone(item))
+  const trash: TrashedItem<T>[] = (options.seedTrash ?? []).map(({ item, daysAgo, deletedBy, reason }) => {
+    const cloned = structuredClone(item)
+    const deletedAt = new Date(Date.now() - daysAgo * 86_400_000).toISOString()
+    return {
+      id: `${options.resourceType}:${cloned.id}`,
+      resourceType: options.resourceType,
+      resourceId: cloned.id,
+      title: options.label(cloned),
+      subtitle: options.subtitle?.(cloned) ?? '',
+      trash: {
+        deletedBy,
+        deletedAt,
+        deletionReason: reason,
+        originalLocation: options.location?.(cloned) ?? options.resourceType,
+        retentionDays: mockConfig.trashRetentionDays,
+        dependencies: options.dependencies?.(cloned) ?? []
+      },
+      item: cloned
+    }
+  })
 
   return {
     all() {
       return store
     },
+    resourceType: options.resourceType,
     async list(query: ListQuery = {}) {
       await simulateRequest()
       return applyQuery(store, query, options.searchFields)
@@ -146,11 +186,51 @@ export function createMockCrudRepository<T extends { id: string }>(options: {
       store[index] = updated
       return updated
     },
-    async remove(id: string) {
+    async remove(id: string, reason?: string) {
       await simulateRequest({ mutation: true })
       const index = store.findIndex(item => item.id === id)
       if (index === -1) throw new MockRepositoryError('server')
-      store.splice(index, 1)
+      const [item] = store.splice(index, 1)
+      const app = useAppStore()
+      const trashMeta: TrashMeta = {
+        deletedBy: app.currentUser.name,
+        deletedAt: new Date().toISOString(),
+        deletionReason: reason,
+        originalLocation: options.location?.(item as T) ?? options.resourceType,
+        retentionDays: mockConfig.trashRetentionDays,
+        dependencies: options.dependencies?.(item as T) ?? []
+      }
+      trash.unshift({
+        id: `${options.resourceType}:${id}`,
+        resourceType: options.resourceType,
+        resourceId: id,
+        title: options.label(item as T),
+        subtitle: options.subtitle?.(item as T) ?? '',
+        trash: trashMeta,
+        item: item as T
+      })
+    },
+    async listTrash() {
+      await simulateRequest()
+      return trash.map(t => structuredClone(t))
+    },
+    async restore(id: string) {
+      await simulateRequest({ mutation: true })
+      const index = trash.findIndex(t => t.resourceId === id)
+      if (index === -1) throw new MockRepositoryError('server')
+      const [trashed] = trash.splice(index, 1)
+      store.unshift(trashed!.item)
+      return trashed!.item
+    },
+    async permanentlyDelete(id: string) {
+      await simulateRequest({ mutation: true })
+      const index = trash.findIndex(t => t.resourceId === id)
+      if (index === -1) throw new MockRepositoryError('server')
+      trash.splice(index, 1)
+    },
+    previewDependencies(id: string) {
+      const item = store.find(i => i.id === id)
+      return item ? options.dependencies?.(item) ?? [] : []
     }
   }
 }

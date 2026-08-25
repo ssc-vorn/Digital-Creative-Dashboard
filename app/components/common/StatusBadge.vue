@@ -24,7 +24,10 @@ const MAP: Record<string, { label: string, color: 'neutral' | 'primary' | 'succe
   'paused': { label: 'Paused', color: 'warning' },
   'former': { label: 'Former', color: 'neutral' },
   'invited': { label: 'Invited', color: 'info' },
+  'pending': { label: 'Pending', color: 'warning' },
   'suspended': { label: 'Suspended', color: 'error' },
+  'deactivated': { label: 'Deactivated', color: 'neutral' },
+  'locked': { label: 'Locked', color: 'error', icon: 'i-lucide-lock' },
   'completed': { label: 'Completed', color: 'neutral' },
   // Tasks
   'todo': { label: 'To Do', color: 'neutral' },
@@ -33,8 +36,15 @@ const MAP: Record<string, { label: string, color: 'neutral' | 'primary' | 'succe
   'done': { label: 'Done', color: 'success' },
   // System health — icon so state never rides on color alone
   'operational': { label: 'Operational', color: 'success', icon: 'i-lucide-circle-check' },
+  'degraded': { label: 'Degraded', color: 'warning', icon: 'i-lucide-triangle-alert' },
   'warning': { label: 'Warning', color: 'warning', icon: 'i-lucide-triangle-alert' },
   'offline': { label: 'Offline', color: 'error', icon: 'i-lucide-circle-x' },
+  // Data safety lifecycle
+  'trashed': { label: 'Trashed', color: 'error', icon: 'i-lucide-trash-2' },
+  'kept': { label: 'Kept', color: 'success' },
+  'expiring-soon': { label: 'Expiring soon', color: 'warning', icon: 'i-lucide-clock-alert' },
+  'eligible-deletion': { label: 'Eligible for deletion', color: 'error', icon: 'i-lucide-clock-alert' },
+  'kept-indefinitely': { label: 'Kept indefinitely', color: 'neutral' },
   // Generic results
   'success': { label: 'Success', color: 'success' },
   'failure': { label: 'Failed', color: 'error' }

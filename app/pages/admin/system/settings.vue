@@ -78,6 +78,32 @@ watch(restricted, (value) => {
   app.setPermissions(value ? ['view'] : ['view', 'create', 'edit', 'publish', 'manage-users', 'manage-settings', 'manage-analytics'])
   toast.add({ title: value ? 'Previewing Viewer role' : 'Back to Admin permissions', icon: 'i-lucide-shield' })
 })
+
+/* Trash retention */
+const RETENTION_OPTIONS = [
+  { label: '7 Days', value: 7 },
+  { label: '30 Days', value: 30 },
+  { label: '60 Days', value: 60 },
+  { label: '90 Days', value: 90 },
+  { label: 'Never', value: Number.POSITIVE_INFINITY }
+]
+const confirm = useConfirm()
+const retentionLabel = computed(() => RETENTION_OPTIONS.find(o => o.value === mockConfig.trashRetentionDays)?.label ?? '30 Days')
+
+async function confirmRetentionChange(label: string) {
+  const option = RETENTION_OPTIONS.find(o => o.label === label)
+  if (!option || option.value === mockConfig.trashRetentionDays) return
+  const ok = await confirm({
+    title: `Change trash retention to ${option.label}?`,
+    description: option.value === Number.POSITIVE_INFINITY
+      ? 'Deleted items will be kept indefinitely until manually emptied from Trash.'
+      : `Items deleted from now on will be eligible for permanent deletion after ${option.label.toLowerCase()}.`,
+    confirmLabel: 'Change retention'
+  })
+  if (!ok) return
+  mockConfig.trashRetentionDays = option.value
+  toast.add({ title: `Retention set to ${option.label}`, color: 'success', icon: 'i-lucide-check' })
+}
 </script>
 
 <template>
@@ -221,6 +247,24 @@ watch(restricted, (value) => {
               <UButton label="Arm" variant="soft" color="neutral" @click="applyFailNext" />
             </div>
           </UFormField>
+        </UCard>
+
+        <UCard :ui="{ body: 'space-y-3' }">
+          <template #header>
+            <div>
+              <h2 class="type-h3">Trash retention</h2>
+              <p class="type-body-sm mt-0.5">How long deleted items stay recoverable before they’re eligible for permanent deletion.</p>
+            </div>
+          </template>
+          <UFormField label="Retention window">
+            <USelect
+              :model-value="retentionLabel"
+              :items="RETENTION_OPTIONS.map(o => o.label)"
+              class="w-48"
+              @update:model-value="confirmRetentionChange"
+            />
+          </UFormField>
+          <p class="text-xs text-dimmed">Applies to items deleted from now on — existing trashed items keep the retention set when they were deleted.</p>
         </UCard>
 
         <UCard :ui="{ body: 'space-y-3' }">

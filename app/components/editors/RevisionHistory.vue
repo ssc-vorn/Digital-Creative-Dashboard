@@ -3,13 +3,17 @@ import type { Revision } from '~/types'
 
 const props = defineProps<{
   fetcher: () => Promise<Revision[]>
+  /** Creates a new version from the selected one and returns it — never overwrites history. */
+  onRestore: (version: number) => Promise<Revision>
 }>()
 
 const toast = useToast()
+const confirm = useConfirm()
 const revisions = ref<Revision[]>([])
 const status = ref<'idle' | 'loading' | 'loaded' | 'error'>('idle')
 const compareOpen = ref(false)
 const compareTarget = ref<Revision | null>(null)
+const restoring = ref(false)
 
 async function load() {
   status.value = 'loading'
@@ -28,13 +32,32 @@ function openCompare(revision: Revision) {
   compareOpen.value = true
 }
 
-function restore(revision: Revision) {
-  toast.add({
-    title: `Restored version ${revision.version}`,
-    description: 'The editor now reflects that version (mock).',
-    icon: 'i-lucide-history',
-    color: 'success'
+const nextVersionNumber = computed(() => Math.max(0, ...revisions.value.map(r => r.version)) + 1)
+
+async function restore(revision: Revision) {
+  const ok = await confirm({
+    title: `Restore Version ${revision.version}?`,
+    description: `Restoring this version will create Version ${nextVersionNumber.value} using the content from Version ${revision.version}.`,
+    confirmLabel: 'Restore as New Version'
   })
+  if (!ok) return
+
+  restoring.value = true
+  compareOpen.value = false
+  try {
+    const created = await props.onRestore(revision.version)
+    revisions.value = [created, ...revisions.value]
+    toast.add({
+      title: `Version ${created.version} created`,
+      description: `Content restored from version ${revision.version}.`,
+      icon: 'i-lucide-history',
+      color: 'success'
+    })
+  } catch (err) {
+    toast.add({ title: 'Restore failed', description: err instanceof Error ? err.message : undefined, color: 'error', icon: 'i-lucide-triangle-alert' })
+  } finally {
+    restoring.value = false
+  }
 }
 </script>
 
@@ -64,7 +87,7 @@ function restore(revision: Revision) {
             <UButton icon="i-lucide-git-compare" size="xs" color="neutral" variant="ghost" aria-label="Compare" @click="openCompare(revision)" />
           </UTooltip>
           <UTooltip text="Restore this version">
-            <UButton icon="i-lucide-history" size="xs" color="neutral" variant="ghost" aria-label="Restore" @click="restore(revision)" />
+            <UButton icon="i-lucide-history" size="xs" color="neutral" variant="ghost" :loading="restoring" aria-label="Restore" @click="restore(revision)" />
           </UTooltip>
         </div>
       </li>
@@ -106,7 +129,8 @@ function restore(revision: Revision) {
             v-if="compareTarget"
             :label="`Restore v${compareTarget.version}`"
             icon="i-lucide-history"
-            @click="restore(compareTarget); compareOpen = false"
+            :loading="restoring"
+            @click="restore(compareTarget)"
           />
         </div>
       </template>

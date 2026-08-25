@@ -2,15 +2,17 @@
 import type { Service } from '~/types'
 import { serviceRepository } from '~/repositories/content'
 
-const confirm = useConfirm()
-
 const collection = useCollection<Service>(query => serviceRepository.list(query), {
   pageSize: 15,
   sortBy: 'title',
   sortDir: 'asc'
 })
 
-const destroy = useMutation((id: string) => serviceRepository.remove(id), { success: 'Service deleted', onSuccess: () => collection.reload() })
+const { moveToTrash } = useTrashAction(serviceRepository, {
+  resourceLabel: 'Service',
+  itemName: s => s.title,
+  onDone: () => collection.reload()
+})
 </script>
 
 <template>
@@ -38,7 +40,7 @@ const destroy = useMutation((id: string) => serviceRepository.remove(id), { succ
               <CommonRowActionsMenu
                 :items="[
                   [{ label: 'Edit', icon: 'i-lucide-pen-line', to: `/admin/services/${service.id}` }],
-                  [{ label: 'Delete', icon: 'i-lucide-trash-2', color: 'error', onSelect: async () => { if (await confirm({ title: `Delete “${service.title}”?`, confirmLabel: 'Delete', danger: true })) destroy.run(service.id) } }]
+                  [{ label: 'Move to Trash', icon: 'i-lucide-trash-2', color: 'error', onSelect: () => moveToTrash(service) }]
                 ]"
               />
             </div>

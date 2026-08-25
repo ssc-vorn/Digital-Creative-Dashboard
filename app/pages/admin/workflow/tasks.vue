@@ -94,6 +94,12 @@ const create = useMutation(
 function isOverdue(task: WorkTask): boolean {
   return task.status !== 'done' && Boolean(task.dueDate && new Date(task.dueDate).getTime() < Date.now())
 }
+
+const { moveToTrash } = useTrashAction(taskRepository, {
+  resourceLabel: 'Task',
+  itemName: t => t.title,
+  onDone: load
+})
 </script>
 
 <template>
@@ -140,12 +146,23 @@ function isOverdue(task: WorkTask): boolean {
               v-for="task in board[column.key]"
               :key="task.id"
               draggable="true"
-              class="cursor-grab rounded-lg border border-default bg-default p-3 shadow-xs transition-all active:cursor-grabbing"
+              class="group cursor-grab rounded-lg border border-default bg-default p-3 shadow-xs transition-all active:cursor-grabbing"
               :class="dragging?.id === task.id ? 'opacity-50' : 'hover:border-accented'"
               @dragstart="dragging = task"
               @dragend="dragging = null"
             >
-              <p class="text-sm font-medium text-highlighted">{{ task.title }}</p>
+              <div class="flex items-start justify-between gap-2">
+                <p class="text-sm font-medium text-highlighted">{{ task.title }}</p>
+                <UButton
+                  icon="i-lucide-trash-2"
+                  size="xs"
+                  color="neutral"
+                  variant="ghost"
+                  class="-mt-1 -mr-1 shrink-0 opacity-0 transition-opacity group-hover:opacity-100 focus-visible:opacity-100"
+                  :aria-label="`Move ${task.title} to Trash`"
+                  @click.stop="moveToTrash(task)"
+                />
+              </div>
               <p v-if="task.projectName" class="mt-0.5 truncate text-xs text-muted">{{ task.projectName }}</p>
               <div class="mt-2 flex items-center justify-between gap-2">
                 <CommonPriorityBadge :priority="task.priority" />

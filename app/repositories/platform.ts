@@ -24,6 +24,10 @@ const campaignCrud = createMockCrudRepository<Campaign>({
   idPrefix: 'cp',
   seed: campaigns,
   searchFields: ['name', 'channel'],
+  resourceType: 'campaign',
+  label: c => c.name,
+  subtitle: c => c.channel,
+  location: () => 'Marketing / Campaigns',
   create: (input, id) => {
     const now = new Date().toISOString()
     return {
@@ -61,6 +65,10 @@ const userCrud = createMockCrudRepository<User>({
   idPrefix: 'usr',
   seed: users,
   searchFields: ['name', 'email', 'roleName'],
+  resourceType: 'user',
+  label: u => u.name,
+  subtitle: u => u.email,
+  location: () => 'Team & Access / Users',
   create: (input, id) => {
     const now = new Date().toISOString()
     const name = input.name ?? 'Invited user'
@@ -87,6 +95,12 @@ export const userRepository = {
     return userCrud.update(id, { status: 'suspended' })
   },
   async activate(id: string): Promise<User> {
+    return userCrud.update(id, { status: 'active' })
+  },
+  async deactivate(id: string): Promise<User> {
+    return userCrud.update(id, { status: 'deactivated' })
+  },
+  async unlock(id: string): Promise<User> {
     return userCrud.update(id, { status: 'active' })
   }
 }

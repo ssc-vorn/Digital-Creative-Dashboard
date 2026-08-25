@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { watchDebounced } from '@vueuse/core'
 import type { BlogPost, ContentStatus } from '~/types'
 import { blogRepository } from '~/repositories/content'
 import { useAppStore } from '~/stores/app'
@@ -16,14 +17,28 @@ const { data: post, status, error, load } = useResource<BlogPost>(async () => {
 const form = ref<BlogPost | null>(null)
 const snapshot = ref('')
 
+const lastSavedAt = ref<string | null>(null)
+const draftRecovery = useDraftRecovery<BlogPost>(id.value)
+
 watch(post, (value) => {
   if (value) {
     form.value = structuredClone(toRaw(value))
     snapshot.value = JSON.stringify(form.value)
+    lastSavedAt.value = value.updatedAt
+    draftRecovery.checkFor(form.value)
   }
 }, { immediate: true })
 
 const dirty = computed(() => Boolean(form.value) && JSON.stringify(form.value) !== snapshot.value)
+
+watchDebounced(form, () => {
+  if (form.value && dirty.value) draftRecovery.persist(form.value)
+}, { debounce: 1000, deep: true })
+
+function restoreDraft() {
+  if (draftRecovery.recoveredDraft.value) form.value = draftRecovery.recoveredDraft.value
+  draftRecovery.discard()
+}
 
 // Reading time derived from content length; recalculated as the author writes.
 watch(() => form.value?.content, (content) => {
@@ -34,7 +49,14 @@ watch(() => form.value?.content, (content) => {
 
 const save = useMutation(
   async () => (form.value ? blogRepository.update(id.value, { ...form.value }) : null),
-  { success: 'Post saved', onSuccess: () => { snapshot.value = JSON.stringify(form.value) } }
+  {
+    success: 'Post saved',
+    onSuccess: (updated) => {
+      snapshot.value = JSON.stringify(form.value)
+      if (updated) lastSavedAt.value = updated.updatedAt
+      draftRecovery.clear()
+    }
+  }
 )
 
 const transition = useMutation(
@@ -82,9 +104,13 @@ const toc = computed(() =>
         :status="form.status"
         :saving="save.saving.value"
         :dirty="dirty"
+        :save-error="save.error.value"
+        :last-saved-at="lastSavedAt"
         :can-save="app.can('edit')"
         @save="save.run()"
       >
+        <EditorsDraftRecoveryBanner v-if="draftRecovery.recoverable.value" @discard="draftRecovery.discard()" @restore="restoreDraft" />
+
         <UCard :ui="{ body: 'space-y-4' }">
           <template #header>
             <h2 class="type-h3">Post</h2>
@@ -120,7 +146,10 @@ const toc = computed(() =>
           </UFormField>
         </UCard>
 
-        <EditorsRevisionHistory :fetcher="() => blogRepository.revisions(id)" />
+        <EditorsRevisionHistory
+          :fetcher="() => blogRepository.revisions(id)"
+          :on-restore="(v: number) => blogRepository.restoreVersion(id, v)"
+        />
 
         <template #aside>
           <EditorsPublishPanel

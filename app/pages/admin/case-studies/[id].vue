@@ -17,12 +17,15 @@ const { data: study, status, error, load } = useResource<CaseStudy>(async () => 
 const form = ref<CaseStudy | null>(null)
 const snapshot = ref('')
 
+const lastSavedAt = ref<string | null>(null)
+
 watch(study, (value) => {
   if (value) {
     form.value = structuredClone(toRaw(value))
     snapshot.value = JSON.stringify(form.value)
     history.value = [JSON.stringify(form.value.blocks)]
     historyIndex.value = 0
+    lastSavedAt.value = value.updatedAt
   }
 }, { immediate: true })
 
@@ -70,7 +73,10 @@ const save = useMutation(
   },
   {
     onSuccess: (updated) => {
-      if (updated) snapshot.value = JSON.stringify(form.value)
+      if (updated) {
+        snapshot.value = JSON.stringify(form.value)
+        lastSavedAt.value = updated.updatedAt
+      }
     }
   }
 )
@@ -196,6 +202,8 @@ const BLOCK_ICONS: Record<string, string> = {
         :status="form.status"
         :saving="save.saving.value"
         :dirty="dirty"
+        :save-error="save.error.value"
+        :last-saved-at="lastSavedAt"
         :can-save="app.can('edit')"
         @save="save.run()"
       >
@@ -265,7 +273,10 @@ const BLOCK_ICONS: Record<string, string> = {
           </TransitionGroup>
         </section>
 
-        <EditorsRevisionHistory :fetcher="() => caseStudyRepository.revisions(id)" />
+        <EditorsRevisionHistory
+          :fetcher="() => caseStudyRepository.revisions(id)"
+          :on-restore="(v: number) => caseStudyRepository.restoreVersion(id, v)"
+        />
 
         <template #aside>
           <EditorsPublishPanel

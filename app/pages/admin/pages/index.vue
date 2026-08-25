@@ -2,8 +2,6 @@
 import type { SitePage } from '~/types'
 import { pageRepository } from '~/repositories/content'
 
-const confirm = useConfirm()
-
 const collection = useCollection<SitePage>(query => pageRepository.list(query), {
   pageSize: 10,
   sortBy: 'updatedAt',
@@ -17,8 +15,12 @@ const columns = [
   { key: 'updatedAt', label: 'Updated', sortable: true, hide: 'md' as const }
 ]
 
-const destroy = useMutation((id: string) => pageRepository.remove(id), { success: 'Page deleted', onSuccess: () => collection.reload() })
 const publish = useMutation((id: string) => pageRepository.publish(id), { success: 'Page published', onSuccess: () => collection.reload() })
+const { moveToTrash } = useTrashAction(pageRepository, {
+  resourceLabel: 'Page',
+  itemName: p => p.title,
+  onDone: () => collection.reload()
+})
 </script>
 
 <template>
@@ -66,7 +68,7 @@ const publish = useMutation((id: string) => pageRepository.publish(id), { succes
                 { label: 'Open builder', icon: 'i-lucide-pen-line', to: `/admin/pages/${row.id}` },
                 ...(row.status !== 'published' ? [{ label: 'Publish', icon: 'i-lucide-send', onSelect: () => publish.run(row.id) }] : [])
               ],
-              [{ label: 'Delete', icon: 'i-lucide-trash-2', color: 'error', onSelect: async () => { if (await confirm({ title: `Delete “${row.title}”?`, confirmLabel: 'Delete', danger: true })) destroy.run(row.id) } }]
+              [{ label: 'Move to Trash', icon: 'i-lucide-trash-2', color: 'error', onSelect: () => moveToTrash(row) }]
             ]"
           />
         </template>
