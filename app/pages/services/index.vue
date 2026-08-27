@@ -9,7 +9,8 @@ useSeoMeta({
   title: 'Services',
   description: 'Brand strategy, identity, campaigns, digital experience, social, production, advertising, and creative technology — under one roof at 24 Seven Solution Advertising.',
   ogTitle: 'Services — 24 Seven Solution Advertising',
-  ogImage: '/og/services.jpg'
+  ogImage: '/og/services.jpg',
+  twitterCard: 'summary_large_image'
 })
 </script>
 

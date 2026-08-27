@@ -2,6 +2,7 @@
 definePageMeta({ layout: 'public' })
 
 const { data: settings } = useSiteSettings()
+const config = useRuntimeConfig()
 
 useSeoMeta({
   title: 'Ideas That Move Brands Forward',
@@ -14,16 +15,28 @@ useSeoMeta({
 
 useHead(() => ({
   script: settings.value
-    ? [{
-        type: 'application/ld+json',
-        innerHTML: JSON.stringify({
-          '@context': 'https://schema.org',
-          '@type': 'Organization',
-          name: settings.value.name,
-          email: settings.value.email,
-          sameAs: settings.value.social.map(s => s.href)
-        })
-      }]
+    ? [
+        {
+          type: 'application/ld+json',
+          innerHTML: JSON.stringify({
+            '@context': 'https://schema.org',
+            '@type': 'Organization',
+            name: settings.value.name,
+            email: settings.value.email,
+            url: config.public.siteUrl,
+            sameAs: settings.value.social.map(s => s.href)
+          })
+        },
+        {
+          type: 'application/ld+json',
+          innerHTML: JSON.stringify({
+            '@context': 'https://schema.org',
+            '@type': 'WebSite',
+            name: settings.value.name,
+            url: config.public.siteUrl
+          })
+        }
+      ]
     : []
 }))
 </script>

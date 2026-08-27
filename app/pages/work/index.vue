@@ -31,7 +31,8 @@ useSeoMeta({
   title: 'Our Work',
   description: 'Selected work from 24 Seven Solution Advertising — branding, campaigns, digital experience, and more for brands who refuse to blend in.',
   ogTitle: 'Our Work — 24 Seven Solution Advertising',
-  ogImage: '/og/work.jpg'
+  ogImage: '/og/work.jpg',
+  twitterCard: 'summary_large_image'
 })
 </script>
 

@@ -11,7 +11,8 @@ useSeoMeta({
   title: 'About',
   description: 'We’re an independent agency of strategists, designers, writers, and engineers who believe the best creative work happens when nobody’s watching the clock.',
   ogTitle: 'About — 24 Seven Solution Advertising',
-  ogImage: '/og/about.jpg'
+  ogImage: '/og/about.jpg',
+  twitterCard: 'summary_large_image'
 })
 </script>
 

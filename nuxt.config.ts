@@ -6,6 +6,14 @@ export default defineNuxtConfig({
 
   css: ['~/assets/css/main.css'],
 
+  runtimeConfig: {
+    public: {
+      // Update once the public site has a real deployed domain — used for
+      // sitemap <loc> entries, which the spec requires as absolute URLs.
+      siteUrl: 'https://24seven.agency'
+    }
+  },
+
   app: {
     head: {
       title: 'Northshore Studio — Admin',

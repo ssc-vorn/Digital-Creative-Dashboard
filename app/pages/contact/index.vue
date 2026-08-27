@@ -7,7 +7,8 @@ useSeoMeta({
   title: 'Contact',
   description: 'Start a project with 24 Seven Solution Advertising — tell us what you\'re building and we\'ll tell you how we\'d approach it.',
   ogTitle: 'Contact — 24 Seven Solution Advertising',
-  ogImage: '/og/contact.jpg'
+  ogImage: '/og/contact.jpg',
+  twitterCard: 'summary_large_image'
 })
 </script>
 

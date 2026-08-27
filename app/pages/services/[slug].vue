@@ -15,6 +15,12 @@ if (!service.value) {
 
 const { data: relatedWork } = await useAsyncData(`service-${slug.value}-work`, () => projectRepository.getProjectsBySlugs(service.value!.relatedProjectSlugs))
 
+useBreadcrumbSchema([
+  { name: 'Home', url: '/' },
+  { name: 'Services', url: '/services' },
+  { name: service.value.name, url: `/services/${service.value.slug}` }
+])
+
 useSeoMeta({
   title: () => service.value?.seo.title ?? service.value?.name,
   description: () => service.value?.seo.description,

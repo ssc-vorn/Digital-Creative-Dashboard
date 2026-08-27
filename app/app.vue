@@ -12,7 +12,7 @@ useHead({
 <template>
   <UApp :toaster="{ position: 'bottom-right', duration: 4000 }">
     <NuxtLayout>
-      <NuxtPage />
+      <NuxtPage :transition="{ name: 'page', mode: 'out-in' }" />
     </NuxtLayout>
   </UApp>
 </template>

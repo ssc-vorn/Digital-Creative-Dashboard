@@ -14,6 +14,12 @@ if (!insight.value) {
 
 const { data: related } = await useAsyncData(`insight-${slug.value}-related`, () => insightRepository.getRelatedInsights(slug.value))
 
+useBreadcrumbSchema([
+  { name: 'Home', url: '/' },
+  { name: 'Insights', url: '/insights' },
+  { name: insight.value.title, url: `/insights/${insight.value.slug}` }
+])
+
 const blocks = computed(() => parseArticleContent(insight.value!.content))
 const headings = computed(() => blocks.value.filter(b => b.type === 'heading').map(b => b.text))
 

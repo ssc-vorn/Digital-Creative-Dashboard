@@ -144,6 +144,18 @@
   --brand-border: #2a2a2c;
 }
 
+/* Consistent, visible keyboard focus everywhere in the public site — a
+   single fallback rather than hand-adding focus-visible utilities to
+   every custom pill/card/icon button (filters, form chips, avatars). */
+.site button:focus-visible,
+.site a:focus-visible,
+.site input:focus-visible,
+.site textarea:focus-visible,
+.site [tabindex]:focus-visible {
+  outline: 2px solid var(--brand-accent);
+  outline-offset: 2px;
+}
+
 @layer components {
   .site-eyebrow {
     @apply font-sans text-xs font-semibold uppercase tracking-[0.18em];

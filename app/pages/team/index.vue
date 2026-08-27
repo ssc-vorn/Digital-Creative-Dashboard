@@ -18,7 +18,8 @@ useSeoMeta({
   title: 'Team',
   description: 'The strategists, designers, writers, and engineers behind 24 Seven Solution Advertising.',
   ogTitle: 'Team — 24 Seven Solution Advertising',
-  ogImage: '/og/team.jpg'
+  ogImage: '/og/team.jpg',
+  twitterCard: 'summary_large_image'
 })
 </script>
 

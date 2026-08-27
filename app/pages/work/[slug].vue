@@ -14,6 +14,12 @@ if (!project.value) {
 
 const { data: nextProject } = await useAsyncData(`case-study-${slug.value}-next`, () => projectRepository.getNextProject(slug.value))
 
+useBreadcrumbSchema([
+  { name: 'Home', url: '/' },
+  { name: 'Work', url: '/work' },
+  { name: project.value.name, url: `/work/${project.value.slug}` }
+])
+
 const NARRATIVE: { key: 'challenge' | 'insight' | 'strategy' | 'creativeDirection' | 'execution', label: string }[] = [
   { key: 'challenge', label: 'Challenge' },
   { key: 'insight', label: 'Insight' },

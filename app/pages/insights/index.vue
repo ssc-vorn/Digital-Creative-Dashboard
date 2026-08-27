@@ -26,7 +26,8 @@ useSeoMeta({
   title: 'Insights',
   description: 'Perspective on brand strategy, creative production, digital, and campaigns from the team at 24 Seven Solution Advertising.',
   ogTitle: 'Insights — 24 Seven Solution Advertising',
-  ogImage: '/og/insights.jpg'
+  ogImage: '/og/insights.jpg',
+  twitterCard: 'summary_large_image'
 })
 </script>
 
