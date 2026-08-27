@@ -89,10 +89,17 @@ useSeoMeta({
       <div class="site-container">
         <p v-reveal class="site-eyebrow mb-14">What clients say</p>
         <div class="grid grid-cols-1 gap-10 sm:grid-cols-3">
-          <blockquote v-for="(t, index) in testimonials" :key="t.id" v-reveal :style="{ animationDelay: `${index * 80}ms` }">
-            <p class="site-body-lg">“{{ t.quote }}”</p>
-            <footer class="site-caption mt-4">{{ t.author }} · {{ t.role }}, {{ t.client }}</footer>
-          </blockquote>
+          <SiteQuoteBlock
+            v-for="(t, index) in testimonials"
+            :key="t.id"
+            v-reveal
+            :style="{ animationDelay: `${index * 80}ms` }"
+            variant="compact"
+            :quote="t.quote"
+            :author="t.author"
+            :role="t.role"
+            :client="t.client"
+          />
         </div>
       </div>
     </section>

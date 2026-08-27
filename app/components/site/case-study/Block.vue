@@ -57,17 +57,15 @@ defineProps<{ block: CaseStudyBlock }>()
     </figure>
 
     <!-- Quote -->
-    <blockquote v-else-if="block.type === 'quote' && block.quote" class="max-w-3xl border-l-2 py-2 pl-8" :style="{ borderColor: 'var(--brand-accent)' }">
-      <p class="site-h2">“{{ block.quote.text }}”</p>
-      <footer class="site-caption mt-4">{{ block.quote.author }} · {{ block.quote.role }}</footer>
-    </blockquote>
+    <SiteQuoteBlock
+      v-else-if="block.type === 'quote' && block.quote"
+      variant="pullquote"
+      :quote="block.quote.text"
+      :author="block.quote.author"
+      :role="block.quote.role"
+    />
 
     <!-- Stats -->
-    <dl v-else-if="block.type === 'stats'" class="grid grid-cols-2 gap-8 sm:grid-cols-3">
-      <div v-for="stat in block.stats ?? []" :key="stat.label">
-        <dt class="site-caption">{{ stat.label }}</dt>
-        <dd class="site-h1" style="color: var(--brand-accent)">{{ stat.value }}</dd>
-      </div>
-    </dl>
+    <SiteStatsBlock v-else-if="block.type === 'stats'" :stats="block.stats ?? []" />
   </section>
 </template>

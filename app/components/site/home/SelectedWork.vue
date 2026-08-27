@@ -19,8 +19,16 @@ const { data: projects, status } = useAsyncData('home-featured-projects', () => 
     <div v-if="status === 'pending'" class="grid grid-cols-1 gap-10 sm:grid-cols-2 lg:grid-cols-3">
       <div v-for="i in 3" :key="i" class="aspect-[4/3] animate-pulse rounded-sm" style="background-color: var(--brand-border)" />
     </div>
-    <div v-else class="grid grid-cols-1 gap-10 sm:grid-cols-2 lg:grid-cols-3">
-      <SiteWorkProjectCard v-for="project in projects" :key="project.id" :project="project" />
+    <!-- Editorial rhythm: one large featured project beside two smaller,
+         stacked ones, rather than a uniform grid of equal cards. -->
+    <div v-else class="grid grid-cols-1 gap-10 sm:grid-cols-2 lg:grid-cols-2 lg:grid-rows-2 lg:items-stretch">
+      <SiteWorkProjectCard
+        v-if="projects?.[0]"
+        :project="projects[0]"
+        featured
+        class="sm:col-span-2 lg:col-span-1 lg:row-span-2"
+      />
+      <SiteWorkProjectCard v-for="project in (projects ?? []).slice(1)" :key="project.id" :project="project" />
     </div>
   </section>
 </template>

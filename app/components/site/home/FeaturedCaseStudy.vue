@@ -30,12 +30,7 @@ const project = computed(() => featured.value?.[0] ?? null)
           <p class="site-caption mb-3">{{ project.client }} · {{ project.category }} · {{ project.year }}</p>
           <h3 class="site-h1 transition-opacity group-hover:opacity-70">{{ project.name }}</h3>
           <p class="site-body-lg mt-5 max-w-lg">{{ project.summary }}</p>
-          <dl class="mt-8 grid grid-cols-3 gap-6 border-t pt-6" :style="{ borderColor: 'var(--brand-border)' }">
-            <div v-for="result in project.results.slice(0, 3)" :key="result.label">
-              <dt class="site-caption">{{ result.label }}</dt>
-              <dd class="site-h3 mt-1" style="color: var(--brand-accent)">{{ result.value }}</dd>
-            </div>
-          </dl>
+          <SiteStatsBlock :stats="project.results.slice(0, 3)" size="sm" bordered class="mt-8" />
         </div>
       </NuxtLink>
     </div>

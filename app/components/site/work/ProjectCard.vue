@@ -1,12 +1,18 @@
 <script setup lang="ts">
 import type { SiteProject } from '~/types/site'
 
-defineProps<{ project: SiteProject }>()
+const props = withDefaults(defineProps<{ project: SiteProject, featured?: boolean }>(), {
+  featured: false
+})
 </script>
 
 <template>
-  <NuxtLink v-reveal :to="`/work/${project.slug}`" class="group block">
-    <div class="relative aspect-[4/3] overflow-hidden rounded-sm" :style="{ backgroundColor: project.coverColor }">
+  <NuxtLink v-reveal :to="`/work/${project.slug}`" class="group flex h-full flex-col">
+    <div
+      class="relative w-full overflow-hidden rounded-sm"
+      :class="props.featured ? 'flex-1 min-h-64' : 'aspect-[4/3]'"
+      :style="{ backgroundColor: project.coverColor }"
+    >
       <div
         class="absolute inset-0 flex items-end p-6 opacity-0 transition-opacity duration-300 group-hover:opacity-100"
         style="background: linear-gradient(180deg, transparent 40%, rgba(0, 0, 0, 0.55) 100%)"
@@ -18,7 +24,7 @@ defineProps<{ project: SiteProject }>()
     </div>
     <div class="mt-4 flex items-start justify-between gap-4">
       <div class="min-w-0">
-        <p class="site-h3 truncate transition-opacity group-hover:opacity-70">{{ project.name }}</p>
+        <p class="truncate transition-opacity group-hover:opacity-70" :class="props.featured ? 'site-h2' : 'site-h3'">{{ project.name }}</p>
         <p class="site-caption mt-1">{{ project.client }} · {{ project.category }}</p>
       </div>
       <p class="site-caption shrink-0 tabular-nums">{{ project.year }}</p>

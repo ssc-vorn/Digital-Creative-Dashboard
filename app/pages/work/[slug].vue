@@ -74,19 +74,16 @@ useHead(() => ({
 
       <section v-reveal class="mt-20 border-t pt-16" :style="{ borderColor: 'var(--brand-border)' }">
         <p class="site-eyebrow mb-10">Results</p>
-        <dl class="grid grid-cols-2 gap-8 sm:grid-cols-3">
-          <div v-for="result in project.results" :key="result.label">
-            <dt class="site-caption">{{ result.label }}</dt>
-            <dd class="site-h1 mt-1" style="color: var(--brand-accent)">{{ result.value }}</dd>
-          </div>
-        </dl>
+        <SiteStatsBlock :stats="project.results" />
       </section>
 
       <section v-if="project.testimonial" v-reveal class="mt-20 border-t pt-16" :style="{ borderColor: 'var(--brand-border)' }">
-        <blockquote class="max-w-3xl">
-          <p class="site-h1">“{{ project.testimonial.quote }}”</p>
-          <footer class="site-caption mt-6">{{ project.testimonial.author }} · {{ project.testimonial.role }}</footer>
-        </blockquote>
+        <SiteQuoteBlock
+          variant="display"
+          :quote="project.testimonial.quote"
+          :author="project.testimonial.author"
+          :role="project.testimonial.role"
+        />
       </section>
     </div>
 
