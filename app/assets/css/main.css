@@ -201,15 +201,17 @@
     outline-color: var(--brand-accent);
   }
   .site-pill {
-    @apply rounded-full border px-4 py-1.5 text-sm font-medium transition-colors;
+    @apply rounded-full border px-4 py-1.5 text-sm font-medium transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2;
     border-color: var(--brand-border);
     color: var(--brand-ink);
+    outline-color: var(--brand-accent);
   }
   .site-pill-active {
-    @apply rounded-full border px-4 py-1.5 text-sm font-medium transition-colors;
+    @apply rounded-full border px-4 py-1.5 text-sm font-medium transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2;
     background-color: var(--brand-ink);
     border-color: var(--brand-ink);
     color: var(--brand-paper);
+    outline-color: var(--brand-accent);
   }
 }
 

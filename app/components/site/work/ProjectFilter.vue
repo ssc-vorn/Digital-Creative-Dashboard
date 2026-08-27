@@ -15,8 +15,10 @@ const emit = defineEmits<{
 <template>
   <div class="flex flex-col gap-6 border-b pb-8" :style="{ borderColor: 'var(--brand-border)' }">
     <div class="relative max-w-sm">
+      <label for="work-search" class="sr-only">Search projects, clients, services</label>
       <UIcon name="i-lucide-search" class="pointer-events-none absolute left-0 top-1/2 size-4 -translate-y-1/2" style="color: var(--brand-muted)" />
       <input
+        id="work-search"
         :value="props.modelSearch"
         type="text"
         placeholder="Search projects, clients, services…"

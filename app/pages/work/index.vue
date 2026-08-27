@@ -22,8 +22,6 @@ const filtered = computed(() => {
   })
 })
 
-const isFiltered = computed(() => category.value !== null || search.value.trim().length > 0)
-
 function clearFilters() {
   category.value = null
   search.value = ''
