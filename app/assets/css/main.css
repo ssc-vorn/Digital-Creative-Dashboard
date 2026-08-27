@@ -130,6 +130,12 @@
   --brand-muted: #63605a;
   --brand-border: #dedad0;
 
+  /* Fixed (non-theme-adaptive) pair for "signature dark moment" sections —
+     e.g. the CTA banner — that must render identically in light and dark
+     mode rather than inverting with the theme. */
+  --brand-contrast-bg: #101012;
+  --brand-contrast-ink: #f7f5f0;
+
   background-color: var(--brand-paper);
   color: var(--brand-ink);
 }

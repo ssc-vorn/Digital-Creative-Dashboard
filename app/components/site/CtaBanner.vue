@@ -13,11 +13,11 @@ withDefaults(defineProps<{
 </script>
 
 <template>
-  <section class="py-24 sm:py-32" style="background-color: var(--brand-ink); color: var(--brand-paper)">
+  <section class="py-24 sm:py-32" style="background-color: var(--brand-contrast-bg); color: var(--brand-contrast-ink)">
     <div class="site-container flex flex-col items-start gap-8 sm:flex-row sm:items-end sm:justify-between">
-      <h2 v-reveal class="site-h1 max-w-2xl" style="color: var(--brand-paper)">{{ heading }}</h2>
+      <h2 v-reveal class="site-h1 max-w-2xl" style="color: var(--brand-contrast-ink)">{{ heading }}</h2>
       <div v-reveal class="max-w-sm" style="animation-delay: 100ms">
-        <p class="site-body mb-6" style="color: color-mix(in oklab, var(--brand-paper) 65%, transparent)">{{ subtext }}</p>
+        <p class="site-body mb-6" style="color: color-mix(in oklab, var(--brand-contrast-ink) 65%, transparent)">{{ subtext }}</p>
         <NuxtLink :to="ctaTo" class="site-btn-primary">
           {{ ctaLabel }} <UIcon name="i-lucide-arrow-right" class="size-4" />
         </NuxtLink>
