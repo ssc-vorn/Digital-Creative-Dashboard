@@ -49,7 +49,6 @@ useHead(() => ({
     <SiteHomeServicesPreview />
     <SiteHomeFeaturedCaseStudy />
     <SiteHomeClientsMarquee />
-    <SiteHomeCreativeProcess />
     <SiteHomeInsightsPreview />
     <SiteCtaBanner />
   </div>

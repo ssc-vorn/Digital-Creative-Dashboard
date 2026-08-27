@@ -58,7 +58,7 @@ useSeoMeta({
       </div>
     </section>
 
-    <SiteHomeCreativeProcess />
+    <SiteCreativeProcess />
 
     <section class="site-container py-20 sm:py-28">
       <div v-reveal class="mb-14 flex flex-col items-end justify-between gap-6 sm:flex-row">
@@ -74,13 +74,14 @@ useSeoMeta({
       <div class="grid grid-cols-1 gap-10 sm:grid-cols-3">
         <div v-for="(person, index) in leadership" :key="person.id" v-reveal :style="{ animationDelay: `${index * 80}ms` }">
           <span
-            class="flex size-16 items-center justify-center rounded-full font-display text-lg font-medium text-white"
+            class="flex size-24 items-center justify-center rounded-full font-display text-2xl font-medium text-white"
             :style="{ backgroundColor: person.avatarColor }"
           >
             {{ person.initials }}
           </span>
-          <p class="site-h3 mt-4">{{ person.name }}</p>
+          <p class="site-h2 mt-5">{{ person.name }}</p>
           <p class="site-caption mt-1">{{ person.role }}</p>
+          <p class="site-body mt-3 max-w-xs">{{ person.specialty }}</p>
         </div>
       </div>
     </section>
@@ -103,8 +104,6 @@ useSeoMeta({
         </div>
       </div>
     </section>
-
-    <SiteHomeClientsMarquee />
 
     <SiteCtaBanner />
   </div>
