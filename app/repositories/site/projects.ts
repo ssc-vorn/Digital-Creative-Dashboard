@@ -34,5 +34,10 @@ export const projectRepository = {
   async getCategories(): Promise<ProjectCategory[]> {
     await simulateRequest()
     return Array.from(new Set(siteProjects.map(p => p.category)))
+  },
+
+  async getProjectsBySlugs(slugs: string[]): Promise<SiteProject[]> {
+    await simulateRequest()
+    return siteProjects.filter(p => slugs.includes(p.slug))
   }
 }
