@@ -42,14 +42,28 @@ const emptyForm: ContactInquiry = {
   phone: ''
 }
 
-const form = useLocalStorage<ContactInquiry>('site-contact-draft', { ...emptyForm })
-const step = useLocalStorage('site-contact-step', 1)
+const form = useLocalStorage<ContactInquiry>('site-contact-draft', { ...emptyForm }, { initOnMounted: true })
+const step = useLocalStorage('site-contact-step', 1, { initOnMounted: true })
 const started = ref(false)
 const errors = ref<Record<string, string>>({})
 const submitting = ref(false)
 const submitError = ref<string | null>(null)
 const submitted = ref(false)
 const referenceId = ref<string | null>(null)
+const showResumeBanner = ref(false)
+/** Honeypot: real users never see or fill this field; a filled value marks the submission as a bot. */
+const honeypot = ref('')
+
+onMounted(async () => {
+  await nextTick()
+  if (step.value > 1) showResumeBanner.value = true
+})
+
+function discardDraft() {
+  form.value = { ...emptyForm }
+  step.value = 1
+  showResumeBanner.value = false
+}
 
 const followUp = computed(() => (form.value.need ? NEED_FOLLOWUP[form.value.need] : undefined))
 
@@ -99,6 +113,7 @@ async function submit() {
     step.value = 5
     return
   }
+  if (honeypot.value) return
   submitting.value = true
   submitError.value = null
   try {
@@ -109,6 +124,7 @@ async function submit() {
     form.value = { ...emptyForm }
     step.value = 1
     started.value = false
+    showResumeBanner.value = false
   } catch {
     submitError.value = 'Something went wrong sending your inquiry. Your answers are saved — please try again.'
   } finally {
@@ -144,6 +160,17 @@ function startOver() {
     </div>
 
     <div v-else>
+      <div
+        v-if="showResumeBanner"
+        class="mb-8 flex items-center justify-between gap-4 rounded-sm border p-4"
+        :style="{ borderColor: 'var(--brand-border)' }"
+      >
+        <p class="site-body text-sm">Welcome back — we saved your progress.</p>
+        <button type="button" class="site-caption shrink-0 underline underline-offset-4" @click="discardDraft">
+          Start over
+        </button>
+      </div>
+
       <div class="mb-10">
         <div class="mb-3 flex items-center justify-between">
           <p class="site-caption">Step {{ step }} of {{ TOTAL_STEPS }} · {{ STEP_LABELS[step - 1] }}</p>
@@ -269,6 +296,11 @@ function startOver() {
               <label class="type-label mb-2 block" for="c-phone">Phone</label>
               <input id="c-phone" v-model="form.phone" type="tel" class="site-body-lg w-full border-0 border-b bg-transparent py-2 outline-none focus:border-current" :style="{ borderColor: 'var(--brand-border)' }">
             </div>
+          </div>
+
+          <div class="sr-only" aria-hidden="true">
+            <label for="c-website">Website</label>
+            <input id="c-website" v-model="honeypot" type="text" tabindex="-1" autocomplete="off">
           </div>
         </div>
 
