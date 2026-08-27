@@ -5,6 +5,8 @@ import { teamRepository } from '~/repositories/site/team'
 definePageMeta({ layout: 'public' })
 
 const { data: team, status } = useAsyncData('team-index', () => teamRepository.getTeam())
+const leadership = computed(() => (team.value ?? []).slice(0, 3))
+const wider = computed(() => (team.value ?? []).slice(3))
 
 const selected = ref<TeamMember | null>(null)
 const open = ref(false)
@@ -37,26 +39,56 @@ useSeoMeta({
       </div>
     </div>
 
-    <div v-else class="grid grid-cols-2 gap-x-6 gap-y-14 sm:grid-cols-3 lg:grid-cols-4">
-      <button
-        v-for="(person, index) in team"
-        :key="person.id"
-        v-reveal
-        type="button"
-        class="group text-left"
-        :style="{ animationDelay: `${index * 60}ms` }"
-        @click="viewProfile(person)"
-      >
-        <span
-          class="flex size-20 items-center justify-center rounded-full font-display text-xl font-medium text-white transition-transform group-hover:scale-105"
-          :style="{ backgroundColor: person.avatarColor }"
-        >
-          {{ person.initials }}
-        </span>
-        <p class="site-h3 mt-4 transition-opacity group-hover:opacity-70">{{ person.name }}</p>
-        <p class="site-caption mt-1">{{ person.role }}</p>
-      </button>
-    </div>
+    <template v-else>
+      <section class="mb-20">
+        <p v-reveal class="site-eyebrow mb-10">Leadership</p>
+        <div class="grid grid-cols-1 gap-10 sm:grid-cols-3">
+          <button
+            v-for="(person, index) in leadership"
+            :key="person.id"
+            v-reveal
+            type="button"
+            class="group text-left"
+            :style="{ animationDelay: `${index * 60}ms` }"
+            @click="viewProfile(person)"
+          >
+            <span
+              class="flex size-24 items-center justify-center rounded-full font-display text-2xl font-medium text-white transition-transform group-hover:scale-105"
+              :style="{ backgroundColor: person.avatarColor }"
+            >
+              {{ person.initials }}
+            </span>
+            <p class="site-h2 mt-5 transition-opacity group-hover:opacity-70">{{ person.name }}</p>
+            <p class="site-caption mt-1">{{ person.role }}</p>
+            <p class="site-body mt-3 max-w-xs">{{ person.specialty }}</p>
+          </button>
+        </div>
+      </section>
+
+      <section v-if="wider.length">
+        <p v-reveal class="site-eyebrow mb-10">The wider team</p>
+        <div class="grid grid-cols-2 gap-x-6 gap-y-14 sm:grid-cols-3 lg:grid-cols-4">
+          <button
+            v-for="(person, index) in wider"
+            :key="person.id"
+            v-reveal
+            type="button"
+            class="group text-left"
+            :style="{ animationDelay: `${index * 60}ms` }"
+            @click="viewProfile(person)"
+          >
+            <span
+              class="flex size-20 items-center justify-center rounded-full font-display text-xl font-medium text-white transition-transform group-hover:scale-105"
+              :style="{ backgroundColor: person.avatarColor }"
+            >
+              {{ person.initials }}
+            </span>
+            <p class="site-h3 mt-4 transition-opacity group-hover:opacity-70">{{ person.name }}</p>
+            <p class="site-caption mt-1">{{ person.role }}</p>
+          </button>
+        </div>
+      </section>
+    </template>
 
     <UModal v-model:open="open" :ui="{ content: 'site bg-[var(--brand-surface)] text-[var(--brand-ink)]' }">
       <template #body>
