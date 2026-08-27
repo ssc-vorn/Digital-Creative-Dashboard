@@ -21,7 +21,24 @@ useBreadcrumbSchema([
 ])
 
 const blocks = computed(() => parseArticleContent(insight.value!.content))
-const headings = computed(() => blocks.value.filter(b => b.type === 'heading').map(b => b.text))
+
+/** Per-block heading slugs, deduped so two identically-worded headings don't collide on the same #id. */
+const headingSlugs = computed(() => {
+  const counts = new Map<string, number>()
+  return blocks.value.map((block) => {
+    if (block.type !== 'heading') return null
+    const base = slugify(block.text)
+    const count = (counts.get(base) ?? 0) + 1
+    counts.set(base, count)
+    return count === 1 ? base : `${base}-${count}`
+  })
+})
+
+const headings = computed(() =>
+  blocks.value
+    .map((block, index) => (block.type === 'heading' ? { text: block.text, slug: headingSlugs.value[index]! } : null))
+    .filter((h): h is { text: string, slug: string } => h !== null)
+)
 
 const toast = useToast()
 async function share() {
@@ -94,16 +111,16 @@ useHead(() => ({
         <aside class="hidden lg:block">
           <div class="sticky top-32 space-y-8">
             <div v-if="headings.length">
-              <p class="type-overline mb-3" style="color: var(--brand-muted)">On this page</p>
-              <nav class="space-y-2">
+              <p id="toc-heading" class="type-overline mb-3" style="color: var(--brand-muted)">On this page</p>
+              <nav class="space-y-2" aria-labelledby="toc-heading">
                 <a
                   v-for="heading in headings"
-                  :key="heading"
-                  :href="`#${slugify(heading)}`"
+                  :key="heading.slug"
+                  :href="`#${heading.slug}`"
                   class="block text-sm transition-opacity hover:opacity-70"
                   style="color: var(--brand-muted)"
                 >
-                  {{ heading }}
+                  {{ heading.text }}
                 </a>
               </nav>
             </div>
@@ -118,7 +135,7 @@ useHead(() => ({
           <p class="site-body-lg mb-8">{{ insight.excerpt }}</p>
 
           <template v-for="(block, index) in blocks" :key="index">
-            <h2 v-if="block.type === 'heading'" :id="slugify(block.text)" class="site-h2 mb-4 mt-10 scroll-mt-32">{{ block.text }}</h2>
+            <h2 v-if="block.type === 'heading'" :id="headingSlugs[index]!" class="site-h2 mb-4 mt-10 scroll-mt-32">{{ block.text }}</h2>
             <p v-else class="site-body-lg mb-6">{{ block.text }}</p>
           </template>
 
