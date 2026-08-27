@@ -31,7 +31,7 @@ const caseStudyCrud = createMockCrudRepository<CaseStudy>({
       excerpt: input.excerpt ?? '',
       coverColor: '#8b5cf6',
       blocks: input.blocks ?? [],
-      seo: makeSeo(title, `case-studies/${slugify(title)}`, 35),
+      seo: input.seo ?? makeSeo(title, `case-studies/${slugify(title)}`, 35),
       readingTime: 5,
       createdAt: now,
       updatedAt: now
@@ -46,11 +46,6 @@ export const caseStudyRepository = {
   },
   async archive(id: string): Promise<CaseStudy> {
     return caseStudyCrud.update(id, { status: 'archived' })
-  },
-  async duplicate(id: string): Promise<CaseStudy> {
-    const source = caseStudyCrud.all().find(c => c.id === id)
-    if (!source) throw new Error('Case study not found')
-    return caseStudyCrud.create({ ...structuredClone(source), title: `${source.title} (copy)`, status: 'draft' } as Partial<CaseStudy>)
   },
   async revisions(id: string): Promise<Revision[]> {
     const item = caseStudyCrud.all().find(c => c.id === id)
@@ -91,7 +86,7 @@ const blogCrud = createMockCrudRepository<BlogPost>({
       featured: false,
       readingTime: 4,
       views: 0,
-      seo: makeSeo(title, `journal/${slugify(title)}`, 35),
+      seo: input.seo ?? makeSeo(title, `journal/${slugify(title)}`, 35),
       publishedAt: null,
       scheduledFor: null,
       createdAt: now,
@@ -175,7 +170,7 @@ const pageCrud = createMockCrudRepository<SitePage>({
       slug: slugify(title),
       status: 'draft',
       blocks: input.blocks ?? [],
-      seo: makeSeo(title, slugify(title), 35),
+      seo: input.seo ?? makeSeo(title, slugify(title), 35),
       createdAt: now,
       updatedAt: now
     }

@@ -51,6 +51,7 @@ onMounted(() => {
 
 const publish = useMutation((id: string) => projectRepository.publish(id), { success: 'Project published', onSuccess: () => collection.reload() })
 const archive = useMutation((id: string) => projectRepository.archive(id), { success: 'Project archived', onSuccess: () => collection.reload() })
+const restoreFromArchive = useMutation((id: string) => projectRepository.update(id, { status: 'draft' }), { success: 'Restored from Archive', onSuccess: () => collection.reload() })
 
 const duplicateModal = overlay.create(ProjectsProjectDuplicateModal)
 async function openDuplicate(project: Project) {
@@ -95,7 +96,7 @@ function rowActions(project: Project): DropdownMenuItem[][] {
         ? [{ label: 'Publish', icon: 'i-lucide-send', onSelect: () => publish.run(project.id) }]
         : []),
       ...(project.status === 'archived'
-        ? [{ label: 'Restore from Archive', icon: 'i-lucide-archive-restore', onSelect: () => projectRepository.update(project.id, { status: 'draft' }).then(() => collection.reload()) }]
+        ? [{ label: 'Restore from Archive', icon: 'i-lucide-archive-restore', onSelect: () => restoreFromArchive.run(project.id) }]
         : [{ label: 'Archive', icon: 'i-lucide-archive', onSelect: () => archive.run(project.id) }])
     ],
     [
@@ -320,6 +321,10 @@ function rowActions(project: Project): DropdownMenuItem[][] {
         <section v-if="previewProject.challenge" class="mt-8">
           <h2 class="type-h2">Challenge</h2>
           <p class="type-body mt-2 text-muted">{{ previewProject.challenge }}</p>
+        </section>
+        <section v-if="previewProject.strategy" class="mt-8">
+          <h2 class="type-h2">Strategy</h2>
+          <p class="type-body mt-2 text-muted">{{ previewProject.strategy }}</p>
         </section>
         <section v-if="previewProject.solution" class="mt-8">
           <h2 class="type-h2">Solution</h2>

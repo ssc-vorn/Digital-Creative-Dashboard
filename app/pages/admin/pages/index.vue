@@ -22,6 +22,7 @@ const columns = [
 
 const publish = useMutation((id: string) => pageRepository.publish(id), { success: 'Page published', onSuccess: () => collection.reload() })
 const archive = useMutation((id: string) => pageRepository.archive(id), { success: 'Page archived', onSuccess: () => collection.reload() })
+const restoreFromArchive = useMutation((id: string) => pageRepository.update(id, { status: 'draft' }), { success: 'Restored from Archive', onSuccess: () => collection.reload() })
 const { moveToTrash } = useTrashAction(pageRepository, {
   resourceLabel: 'Page',
   itemName: p => p.title,
@@ -98,7 +99,7 @@ async function openDuplicate(page: SitePage) {
               ],
               [
                 ...(row.status === 'archived'
-                  ? [{ label: 'Restore from Archive', icon: 'i-lucide-archive-restore', onSelect: () => pageRepository.update(row.id, { status: 'draft' }).then(() => collection.reload()) }]
+                  ? [{ label: 'Restore from Archive', icon: 'i-lucide-archive-restore', onSelect: () => restoreFromArchive.run(row.id) }]
                   : [{ label: 'Archive', icon: 'i-lucide-archive', onSelect: () => archive.run(row.id) }]),
                 { label: 'Move to Trash', icon: 'i-lucide-trash-2', color: 'error', onSelect: () => moveToTrash(row) }
               ]

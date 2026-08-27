@@ -6,6 +6,8 @@ import { useIntersectionObserver } from '@vueuse/core'
  * itself; the `mounted` hook that touches IntersectionObserver never runs
  * server-side regardless, so behaviour stays client-only in practice.
  */
+const stopFns = new WeakMap<HTMLElement, () => void>()
+
 export default defineNuxtPlugin((nuxtApp) => {
   nuxtApp.vueApp.directive('reveal', {
     mounted(el: HTMLElement) {
@@ -20,6 +22,11 @@ export default defineNuxtPlugin((nuxtApp) => {
         },
         { threshold: 0.15 }
       )
+      stopFns.set(el, stop)
+    },
+    unmounted(el: HTMLElement) {
+      stopFns.get(el)?.()
+      stopFns.delete(el)
     }
   })
 })

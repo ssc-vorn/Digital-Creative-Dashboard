@@ -45,18 +45,23 @@ async function openDuplicate(campaign: Campaign) {
     options: [
       { key: 'budget', label: 'Budget', description: 'Carry over the planned budget amount', default: true }
     ],
-    onConfirm: (name, selected) => campaignRepository.create({
-      name,
-      channel: campaign.channel,
-      status: 'draft',
-      startDate: new Date().toISOString(),
-      endDate: campaign.endDate,
-      budget: selected.budget ? campaign.budget : 0,
-      spent: 0,
-      visitors: 0,
-      leads: 0,
-      conversionRate: 0
-    } as Partial<Campaign>)
+    onConfirm: (name, selected) => {
+      const duration = Math.max(0, new Date(campaign.endDate).getTime() - new Date(campaign.startDate).getTime())
+      const startDate = new Date()
+      const endDate = new Date(startDate.getTime() + duration)
+      return campaignRepository.create({
+        name,
+        channel: campaign.channel,
+        status: 'draft',
+        startDate: startDate.toISOString(),
+        endDate: endDate.toISOString(),
+        budget: selected.budget ? campaign.budget : 0,
+        spent: 0,
+        visitors: 0,
+        leads: 0,
+        conversionRate: 0
+      } as Partial<Campaign>)
+    }
   }).result
   if (created) collection.reload()
 }

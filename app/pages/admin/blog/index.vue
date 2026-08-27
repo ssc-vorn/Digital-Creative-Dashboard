@@ -69,6 +69,7 @@ onMounted(() => {
 
 const publish = useMutation((id: string) => blogRepository.publish(id), { success: 'Post published', onSuccess: () => collection.reload() })
 const archive = useMutation((id: string) => blogRepository.archive(id), { success: 'Post archived', onSuccess: () => collection.reload() })
+const restoreFromArchive = useMutation((id: string) => blogRepository.update(id, { status: 'draft' }), { success: 'Restored from Archive', onSuccess: () => collection.reload() })
 
 async function bulkPublish(ids: string[], clear: () => void) {
   await Promise.all(ids.map(id => blogRepository.publish(id)))
@@ -117,7 +118,7 @@ function rowActions(post: BlogPost): DropdownMenuItem[][] {
     ],
     [
       ...(post.status === 'archived'
-        ? [{ label: 'Restore from Archive', icon: 'i-lucide-archive-restore', onSelect: () => blogRepository.update(post.id, { status: 'draft' }).then(() => collection.reload()) }]
+        ? [{ label: 'Restore from Archive', icon: 'i-lucide-archive-restore', onSelect: () => restoreFromArchive.run(post.id) }]
         : [{ label: 'Archive', icon: 'i-lucide-archive', onSelect: () => archive.run(post.id) }]),
       { label: 'Move to Trash', icon: 'i-lucide-trash-2', color: 'error' as const, onSelect: () => moveToTrash(post) }
     ]

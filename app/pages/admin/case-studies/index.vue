@@ -26,6 +26,7 @@ const columns = [
 
 const publish = useMutation((id: string) => caseStudyRepository.publish(id), { success: 'Case study published', onSuccess: () => collection.reload() })
 const archive = useMutation((id: string) => caseStudyRepository.archive(id), { success: 'Case study archived', onSuccess: () => collection.reload() })
+const restoreFromArchive = useMutation((id: string) => caseStudyRepository.update(id, { status: 'draft' }), { success: 'Restored from Archive', onSuccess: () => collection.reload() })
 const { moveToTrash } = useTrashAction(caseStudyRepository, {
   resourceLabel: 'Case Study',
   itemName: c => c.title,
@@ -62,7 +63,7 @@ function rowActions(item: CaseStudy): DropdownMenuItem[][] {
     ],
     [
       ...(item.status === 'archived'
-        ? [{ label: 'Restore from Archive', icon: 'i-lucide-archive-restore', onSelect: () => caseStudyRepository.update(item.id, { status: 'draft' }).then(() => collection.reload()) }]
+        ? [{ label: 'Restore from Archive', icon: 'i-lucide-archive-restore', onSelect: () => restoreFromArchive.run(item.id) }]
         : [{ label: 'Archive', icon: 'i-lucide-archive', onSelect: () => archive.run(item.id) }]),
       { label: 'Move to Trash', icon: 'i-lucide-trash-2', color: 'error' as const, onSelect: () => moveToTrash(item) }
     ]
