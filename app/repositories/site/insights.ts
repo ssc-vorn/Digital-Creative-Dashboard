@@ -26,6 +26,11 @@ export const insightRepository = {
     await simulateRequest()
     const current = insightsData.find(i => i.slug === slug)
     if (!current) return []
-    return insightsData.filter(i => i.slug !== slug && i.category === current.category).slice(0, 3)
+    const others = insightsData.filter(i => i.slug !== slug)
+    const sameCategory = others.filter(i => i.category === current.category)
+    const rest = others
+      .filter(i => i.category !== current.category)
+      .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+    return [...sameCategory, ...rest].slice(0, 3)
   }
 }
