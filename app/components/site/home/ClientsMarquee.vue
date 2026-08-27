@@ -10,7 +10,11 @@ const track = computed(() => [...(clients.value ?? []), ...(clients.value ?? [])
     <div class="site-container mb-8">
       <p v-reveal class="site-eyebrow">Trusted by brands who move fast</p>
     </div>
-    <div class="overflow-hidden" style="mask-image: linear-gradient(90deg, transparent, black 8%, black 92%, transparent)">
+    <ul class="sr-only">
+      <li v-for="client in clients" :key="client.id">{{ client.name }}</li>
+    </ul>
+
+    <div class="overflow-hidden" style="mask-image: linear-gradient(90deg, transparent, black 8%, black 92%, transparent)" aria-hidden="true">
       <div class="site-marquee-track flex w-max items-center gap-16 py-2">
         <span
           v-for="(client, index) in track"
