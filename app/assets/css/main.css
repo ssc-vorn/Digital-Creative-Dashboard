@@ -115,3 +115,118 @@
     scroll-behavior: auto !important;
   }
 }
+
+/* ------------------------------------------------------------------ */
+/* Public site (24 Seven Solution Advertising) — a distinct editorial */
+/* brand system, scoped to `.site` so it never leaks into the admin   */
+/* console's dashboard theme.                                         */
+/* ------------------------------------------------------------------ */
+.site {
+  --brand-ink: #101012;
+  --brand-paper: #f7f5f0;
+  --brand-surface: #ffffff;
+  --brand-accent: #ff4520;
+  --brand-accent-ink: #101012;
+  --brand-muted: #63605a;
+  --brand-border: #dedad0;
+
+  background-color: var(--brand-paper);
+  color: var(--brand-ink);
+}
+
+.dark .site {
+  --brand-ink: #f3f1ec;
+  --brand-paper: #0c0c0d;
+  --brand-surface: #161618;
+  --brand-accent: #ff6a3d;
+  --brand-accent-ink: #101012;
+  --brand-muted: #9c988f;
+  --brand-border: #2a2a2c;
+}
+
+@layer components {
+  .site-eyebrow {
+    @apply font-sans text-xs font-semibold uppercase tracking-[0.18em];
+    color: var(--brand-accent);
+  }
+  .site-display {
+    @apply font-display text-[2.75rem]/[1.02] font-medium tracking-tight sm:text-[4rem]/[0.98] lg:text-[5.5rem]/[0.96];
+  }
+  .site-h1 {
+    @apply font-display text-4xl/[1.08] font-medium tracking-tight sm:text-5xl/[1.05];
+  }
+  .site-h2 {
+    @apply font-display text-2xl/[1.15] font-medium tracking-tight sm:text-3xl/[1.12];
+  }
+  .site-h3 {
+    @apply font-display text-xl/[1.2] font-medium tracking-tight;
+  }
+  .site-body-lg {
+    @apply font-sans text-lg/8 sm:text-xl/9;
+    color: var(--brand-muted);
+  }
+  .site-body {
+    @apply font-sans text-base/7;
+    color: var(--brand-muted);
+  }
+  .site-caption {
+    @apply font-sans text-sm/6;
+    color: var(--brand-muted);
+  }
+  .site-container {
+    @apply mx-auto w-full max-w-[90rem] px-6 sm:px-10 lg:px-16;
+  }
+  .site-btn-primary {
+    @apply inline-flex items-center gap-2 rounded-full px-6 py-3 text-sm font-semibold transition-transform duration-200 ease-out hover:-translate-y-0.5 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2;
+    background-color: var(--brand-accent);
+    color: var(--brand-accent-ink);
+    outline-color: var(--brand-accent);
+  }
+  .site-btn-ghost {
+    @apply inline-flex items-center gap-2 rounded-full border px-6 py-3 text-sm font-semibold transition-transform duration-200 ease-out hover:-translate-y-0.5 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2;
+    border-color: var(--brand-border);
+    color: var(--brand-ink);
+    outline-color: var(--brand-accent);
+  }
+}
+
+/* Scroll-reveal: fades and lifts content into place once it enters view. */
+.site-reveal {
+  opacity: 0;
+  transform: translateY(1.25rem);
+  transition: opacity 0.7s cubic-bezier(0.16, 1, 0.3, 1), transform 0.7s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.site-reveal.is-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+@media (prefers-reduced-motion: reduce) {
+  .site-reveal {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+}
+
+/* Hero entrance stagger */
+@keyframes site-hero-in {
+  from { opacity: 0; transform: translateY(1rem); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.site-hero-in {
+  animation: site-hero-in 0.9s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+/* Clients marquee */
+@keyframes site-marquee {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}
+.site-marquee-track {
+  animation: site-marquee 32s linear infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .site-marquee-track {
+    animation: none;
+  }
+}
