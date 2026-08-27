@@ -6,7 +6,10 @@ const { data: settings } = useSiteSettings()
 useSeoMeta({
   title: 'Privacy Policy',
   description: 'How 24 Seven Solution Advertising collects, uses, and protects your information.',
-  ogTitle: 'Privacy Policy — 24 Seven Solution Advertising'
+  ogTitle: 'Privacy Policy — 24 Seven Solution Advertising',
+  ogDescription: 'How 24 Seven Solution Advertising collects, uses, and protects your information.',
+  ogImage: '/og/privacy.jpg',
+  twitterCard: 'summary_large_image'
 })
 
 const sections = [

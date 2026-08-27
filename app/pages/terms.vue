@@ -6,7 +6,10 @@ const { data: settings } = useSiteSettings()
 useSeoMeta({
   title: 'Terms of Service',
   description: 'The terms that govern your use of the 24 Seven Solution Advertising website.',
-  ogTitle: 'Terms of Service — 24 Seven Solution Advertising'
+  ogTitle: 'Terms of Service — 24 Seven Solution Advertising',
+  ogDescription: 'The terms that govern your use of the 24 Seven Solution Advertising website.',
+  ogImage: '/og/terms.jpg',
+  twitterCard: 'summary_large_image'
 })
 
 const sections = [
