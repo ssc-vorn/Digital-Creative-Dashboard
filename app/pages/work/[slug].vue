@@ -88,5 +88,7 @@ useHead(() => ({
     </div>
 
     <SiteCaseStudyNextProject v-if="nextProject" :project="nextProject" />
+
+    <SiteCtaBanner heading="Want results like this for your brand?" />
   </div>
 </template>
