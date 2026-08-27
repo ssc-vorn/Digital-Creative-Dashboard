@@ -145,6 +145,8 @@ export type ProjectNeed = 'Branding' | 'Digital' | 'Campaign' | 'Social' | 'Prod
 
 export interface ContactInquiry {
   need: ProjectNeed | ''
+  /** Answer to the need-specific follow-up question shown in step 2 (e.g. "New identity" for Branding). */
+  needFollowUp: string
   projectDetails: string
   timeline: string
   budget: string
