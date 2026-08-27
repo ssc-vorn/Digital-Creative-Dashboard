@@ -100,6 +100,8 @@ const transition = useMutation(
 
 const CATEGORIES = ['Branding', 'Web Design', 'Web Development', 'E-commerce', 'Product Design', 'Design System', 'Campaign', 'Content']
 
+const previewOpen = ref(false)
+
 function addResult() {
   form.value?.results.push({ label: '', value: '' })
 }
@@ -133,6 +135,10 @@ function removeResult(index: number) {
         :can-save="app.can('edit')"
         @save="save.run()"
       >
+        <template #actions>
+          <UButton label="Preview" icon="i-lucide-eye" color="neutral" variant="outline" @click="previewOpen = true" />
+        </template>
+
         <EditorsDraftRecoveryBanner v-if="draftRecovery.recoverable.value" @discard="draftRecovery.discard()" @restore="restoreDraft" />
 
         <!-- Basic information -->
@@ -267,6 +273,28 @@ function removeResult(index: number) {
           <EditorsSeoPanel v-model="form.seo" />
         </template>
       </EditorsEditorShell>
+
+      <CommonPreviewModal v-if="form" v-model:open="previewOpen" :status="form.status" :description="`How “${form.title}” reads on the public site.`">
+        <template #default>
+          <header>
+            <p class="type-overline">{{ form.clientName }}</p>
+            <h1 class="type-display mt-2">{{ form.title }}</h1>
+            <p class="type-body-lg mt-3 text-muted">{{ form.summary }}</p>
+          </header>
+          <section v-if="form.challenge" class="mt-8">
+            <h2 class="type-h2">Challenge</h2>
+            <p class="type-body mt-2 text-muted">{{ form.challenge }}</p>
+          </section>
+          <section v-if="form.strategy" class="mt-8">
+            <h2 class="type-h2">Strategy</h2>
+            <p class="type-body mt-2 text-muted">{{ form.strategy }}</p>
+          </section>
+          <section v-if="form.solution" class="mt-8">
+            <h2 class="type-h2">Solution</h2>
+            <p class="type-body mt-2 text-muted">{{ form.solution }}</p>
+          </section>
+        </template>
+      </CommonPreviewModal>
     </div>
   </LayoutAdminPage>
 </template>

@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import { watchDebounced } from '@vueuse/core'
-import type { BlogPost, ContentStatus } from '~/types'
+import type { ActivityEvent, BlogPost, ContentStatus } from '~/types'
 import { blogRepository } from '~/repositories/content'
+import { activityRepository, baseLifecycleEvents } from '~/repositories/activity'
 import { useAppStore } from '~/stores/app'
 
 const route = useRoute()
@@ -19,6 +20,21 @@ const snapshot = ref('')
 
 const lastSavedAt = ref<string | null>(null)
 const draftRecovery = useDraftRecovery<BlogPost>(id.value)
+const previewOpen = ref(false)
+
+const activityEvents = ref<ActivityEvent[]>([])
+const activityStatus = ref<'idle' | 'loading' | 'loaded' | 'error'>('idle')
+async function loadActivity() {
+  if (!form.value) return
+  activityStatus.value = 'loading'
+  try {
+    activityEvents.value = await activityRepository.list(form.value.title, baseLifecycleEvents(form.value, app.currentUser.name))
+    activityStatus.value = 'loaded'
+  } catch {
+    activityStatus.value = 'error'
+  }
+}
+const activity = { data: activityEvents, status: activityStatus, load: loadActivity }
 
 watch(post, (value) => {
   if (value) {
@@ -26,6 +42,7 @@ watch(post, (value) => {
     snapshot.value = JSON.stringify(form.value)
     lastSavedAt.value = value.updatedAt
     draftRecovery.checkFor(form.value)
+    loadActivity()
   }
 }, { immediate: true })
 
@@ -109,6 +126,10 @@ const toc = computed(() =>
         :can-save="app.can('edit')"
         @save="save.run()"
       >
+        <template #actions>
+          <UButton label="Preview" icon="i-lucide-eye" color="neutral" variant="outline" @click="previewOpen = true" />
+        </template>
+
         <EditorsDraftRecoveryBanner v-if="draftRecovery.recoverable.value" @discard="draftRecovery.discard()" @restore="restoreDraft" />
 
         <UCard :ui="{ body: 'space-y-4' }">
@@ -151,6 +172,15 @@ const toc = computed(() =>
           :on-restore="(v: number) => blogRepository.restoreVersion(id, v)"
         />
 
+        <CommonCommentThread resource-type="blog-post" :resource-id="id" />
+
+        <UCard>
+          <template #header>
+            <h2 class="type-h3">Activity</h2>
+          </template>
+          <CommonActivityTimeline :events="activity.data.value ?? []" :status="activity.status.value" @retry="activity.load" />
+        </UCard>
+
         <template #aside>
           <EditorsPublishPanel
             :status="form.status"
@@ -173,6 +203,19 @@ const toc = computed(() =>
           <EditorsSeoPanel v-model="form.seo" />
         </template>
       </EditorsEditorShell>
+
+      <CommonPreviewModal v-if="form" v-model:open="previewOpen" :status="form.status" :description="`How “${form.title}” reads on the public site.`">
+        <template #default>
+          <header>
+            <p class="type-overline">{{ form.category }}</p>
+            <h1 class="type-display mt-2">{{ form.title }}</h1>
+            <p class="type-body-lg mt-3 text-muted">{{ form.excerpt }}</p>
+          </header>
+          <section class="mt-8">
+            <p class="type-body whitespace-pre-line text-muted">{{ form.content }}</p>
+          </section>
+        </template>
+      </CommonPreviewModal>
     </div>
   </LayoutAdminPage>
 </template>

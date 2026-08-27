@@ -2,8 +2,10 @@
 import type { Campaign } from '~/types'
 import { campaignRepository } from '~/repositories/platform'
 import { useAppStore } from '~/stores/app'
+import { CommonDuplicateModal } from '#components'
 
 const app = useAppStore()
+const overlay = useOverlay()
 
 const collection = useCollection<Campaign>(query => campaignRepository.list(query), {
   pageSize: 10,
@@ -34,6 +36,30 @@ const { moveToTrash } = useTrashAction(campaignRepository, {
   itemName: c => c.name,
   onDone: () => collection.reload()
 })
+
+const duplicateModal = overlay.create(CommonDuplicateModal)
+async function openDuplicate(campaign: Campaign) {
+  const created = await duplicateModal.open({
+    resourceLabel: 'Campaign',
+    sourceTitle: campaign.name,
+    options: [
+      { key: 'budget', label: 'Budget', description: 'Carry over the planned budget amount', default: true }
+    ],
+    onConfirm: (name, selected) => campaignRepository.create({
+      name,
+      channel: campaign.channel,
+      status: 'draft',
+      startDate: new Date().toISOString(),
+      endDate: campaign.endDate,
+      budget: selected.budget ? campaign.budget : 0,
+      spent: 0,
+      visitors: 0,
+      leads: 0,
+      conversionRate: 0
+    } as Partial<Campaign>)
+  }).result
+  if (created) collection.reload()
+}
 </script>
 
 <template>
@@ -93,7 +119,12 @@ const { moveToTrash } = useTrashAction(campaignRepository, {
           <span class="block text-right tabular-nums text-default">{{ formatPercent(row.conversionRate, 2) }}</span>
         </template>
         <template #actions="{ row }">
-          <CommonRowActionsMenu :items="[[{ label: 'Move to Trash', icon: 'i-lucide-trash-2', color: 'error', onSelect: () => moveToTrash(row) }]]" />
+          <CommonRowActionsMenu
+            :items="[
+              [{ label: 'Duplicate', icon: 'i-lucide-copy', onSelect: () => openDuplicate(row) }],
+              [{ label: 'Move to Trash', icon: 'i-lucide-trash-2', color: 'error', onSelect: () => moveToTrash(row) }]
+            ]"
+          />
         </template>
       </CommonDataTable>
     </div>

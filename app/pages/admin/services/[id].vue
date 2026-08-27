@@ -59,6 +59,8 @@ function addFaq() {
 function addProcessStep() {
   form.value?.process.push({ step: '', detail: '' })
 }
+
+const previewOpen = ref(false)
 </script>
 
 <template>
@@ -84,6 +86,10 @@ function addProcessStep() {
         :can-save="app.can('edit')"
         @save="save.run()"
       >
+        <template #actions>
+          <UButton label="Preview" icon="i-lucide-eye" color="neutral" variant="outline" @click="previewOpen = true" />
+        </template>
+
         <UCard :ui="{ body: 'space-y-4' }">
           <template #header>
             <h2 class="type-h3">Service details</h2>
@@ -152,6 +158,30 @@ function addProcessStep() {
           <EditorsSeoPanel v-model="form.seo" />
         </template>
       </EditorsEditorShell>
+
+      <CommonPreviewModal v-if="form" v-model:open="previewOpen" :status="form.status" :description="`How “${form.title}” reads on the public site.`">
+        <template #default>
+          <header>
+            <h1 class="type-display">{{ form.title }}</h1>
+            <p class="type-body-lg mt-3 text-muted">{{ form.description }}</p>
+          </header>
+          <section v-if="form.features.length" class="mt-8">
+            <h2 class="type-h2">Features</h2>
+            <ul class="mt-2 list-inside list-disc space-y-1 text-muted">
+              <li v-for="feature in form.features" :key="feature">{{ feature }}</li>
+            </ul>
+          </section>
+          <section v-if="form.faqs.length" class="mt-8">
+            <h2 class="type-h2">FAQs</h2>
+            <div class="mt-2 space-y-4">
+              <div v-for="(faq, i) in form.faqs" :key="i">
+                <p class="font-medium text-highlighted">{{ faq.question }}</p>
+                <p class="mt-1 text-muted">{{ faq.answer }}</p>
+              </div>
+            </div>
+          </section>
+        </template>
+      </CommonPreviewModal>
     </div>
   </LayoutAdminPage>
 </template>

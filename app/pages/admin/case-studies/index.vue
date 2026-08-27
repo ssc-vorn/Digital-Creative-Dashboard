@@ -1,10 +1,14 @@
 <script setup lang="ts">
 import type { DropdownMenuItem } from '@nuxt/ui'
 import type { CaseStudy } from '~/types'
+import { makeSeo } from '~/mock-data/shared'
+import { slugify } from '~/utils/format'
 import { caseStudyRepository } from '~/repositories/content'
 import { useAppStore } from '~/stores/app'
+import { CommonDuplicateModal } from '#components'
 
 const app = useAppStore()
+const overlay = useOverlay()
 
 const collection = useCollection<CaseStudy>(query => caseStudyRepository.list(query), {
   pageSize: 10,
@@ -20,22 +24,48 @@ const columns = [
   { key: 'updatedAt', label: 'Updated', sortable: true, hide: 'md' as const }
 ]
 
-const duplicate = useMutation((id: string) => caseStudyRepository.duplicate(id), { success: 'Case study duplicated', onSuccess: () => collection.reload() })
 const publish = useMutation((id: string) => caseStudyRepository.publish(id), { success: 'Case study published', onSuccess: () => collection.reload() })
+const archive = useMutation((id: string) => caseStudyRepository.archive(id), { success: 'Case study archived', onSuccess: () => collection.reload() })
 const { moveToTrash } = useTrashAction(caseStudyRepository, {
   resourceLabel: 'Case Study',
   itemName: c => c.title,
   onDone: () => collection.reload()
 })
 
+const duplicateModal = overlay.create(CommonDuplicateModal)
+async function openDuplicate(item: CaseStudy) {
+  const created = await duplicateModal.open({
+    resourceLabel: 'Case Study',
+    sourceTitle: item.title,
+    options: [
+      { key: 'content', label: 'Content', description: 'Story blocks', default: true },
+      { key: 'seo', label: 'SEO', description: 'Meta title, description and social preview', default: true }
+    ],
+    onConfirm: (title, selected) => caseStudyRepository.create({
+      ...structuredClone(toRaw(item)),
+      title,
+      slug: slugify(title),
+      status: 'draft',
+      blocks: selected.content ? item.blocks : [],
+      seo: selected.seo ? { ...item.seo, slug: slugify(title) } : makeSeo(title, `case-studies/${slugify(title)}`, 35)
+    } as Partial<CaseStudy>)
+  }).result
+  if (created) collection.reload()
+}
+
 function rowActions(item: CaseStudy): DropdownMenuItem[][] {
   return [
     [
       { label: 'Edit story', icon: 'i-lucide-pen-line', to: `/admin/case-studies/${item.id}` },
-      { label: 'Duplicate', icon: 'i-lucide-copy', onSelect: () => duplicate.run(item.id) },
+      { label: 'Duplicate', icon: 'i-lucide-copy', onSelect: () => openDuplicate(item) },
       ...(app.can('publish') && item.status !== 'published' ? [{ label: 'Publish', icon: 'i-lucide-send', onSelect: () => publish.run(item.id) }] : [])
     ],
-    [{ label: 'Move to Trash', icon: 'i-lucide-trash-2', color: 'error' as const, onSelect: () => moveToTrash(item) }]
+    [
+      ...(item.status === 'archived'
+        ? [{ label: 'Restore from Archive', icon: 'i-lucide-archive-restore', onSelect: () => caseStudyRepository.update(item.id, { status: 'draft' }).then(() => collection.reload()) }]
+        : [{ label: 'Archive', icon: 'i-lucide-archive', onSelect: () => archive.run(item.id) }]),
+      { label: 'Move to Trash', icon: 'i-lucide-trash-2', color: 'error' as const, onSelect: () => moveToTrash(item) }
+    ]
   ]
 }
 </script>

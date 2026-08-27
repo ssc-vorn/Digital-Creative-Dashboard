@@ -12,6 +12,13 @@ const route = useRoute()
 
 const view = ref<'table' | 'grid' | 'editorial'>('table')
 
+const previewProject = ref<Project | null>(null)
+const previewOpen = ref(false)
+function openPreview(project: Project) {
+  previewProject.value = project
+  previewOpen.value = true
+}
+
 const collection = useCollection<Project>(query => projectRepository.list(query), {
   pageSize: 10,
   sortBy: 'updatedAt',
@@ -80,7 +87,7 @@ function rowActions(project: Project): DropdownMenuItem[][] {
   return [
     [
       { label: 'Edit', icon: 'i-lucide-pen-line', to: `/admin/projects/${project.id}` },
-      { label: 'Preview', icon: 'i-lucide-external-link', onSelect: () => useToast().add({ title: 'Preview opens the public site once it exists', icon: 'i-lucide-info' }) },
+      { label: 'Preview', icon: 'i-lucide-eye', onSelect: () => openPreview(project) },
       { label: 'Duplicate', icon: 'i-lucide-copy', onSelect: () => openDuplicate(project) }
     ],
     [
@@ -302,5 +309,23 @@ function rowActions(project: Project): DropdownMenuItem[][] {
         </div>
       </div>
     </div>
+
+    <CommonPreviewModal v-if="previewProject" v-model:open="previewOpen" :status="previewProject.status" :description="`How “${previewProject.title}” reads on the public site.`">
+      <template #default>
+        <header>
+          <p class="type-overline">{{ previewProject.clientName }}</p>
+          <h1 class="type-display mt-2">{{ previewProject.title }}</h1>
+          <p class="type-body-lg mt-3 text-muted">{{ previewProject.summary }}</p>
+        </header>
+        <section v-if="previewProject.challenge" class="mt-8">
+          <h2 class="type-h2">Challenge</h2>
+          <p class="type-body mt-2 text-muted">{{ previewProject.challenge }}</p>
+        </section>
+        <section v-if="previewProject.solution" class="mt-8">
+          <h2 class="type-h2">Solution</h2>
+          <p class="type-body mt-2 text-muted">{{ previewProject.solution }}</p>
+        </section>
+      </template>
+    </CommonPreviewModal>
   </LayoutAdminPage>
 </template>

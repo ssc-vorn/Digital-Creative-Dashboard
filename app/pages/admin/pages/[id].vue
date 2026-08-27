@@ -1,6 +1,7 @@
 <script setup lang="ts">
-import type { ContentStatus, PageBlock, PageBlockCategory, SitePage } from '~/types'
+import type { ActivityEvent, ContentStatus, PageBlock, PageBlockCategory, SitePage } from '~/types'
 import { pageRepository } from '~/repositories/content'
+import { activityRepository, baseLifecycleEvents } from '~/repositories/activity'
 import { useAppStore } from '~/stores/app'
 
 const route = useRoute()
@@ -17,6 +18,21 @@ const form = ref<SitePage | null>(null)
 const snapshot = ref('')
 const selectedId = ref<string | null>(null)
 const lastSavedAt = ref<string | null>(null)
+const previewOpen = ref(false)
+
+const activityEvents = ref<ActivityEvent[]>([])
+const activityStatus = ref<'idle' | 'loading' | 'loaded' | 'error'>('idle')
+async function loadActivity() {
+  if (!form.value) return
+  activityStatus.value = 'loading'
+  try {
+    activityEvents.value = await activityRepository.list(form.value.title, baseLifecycleEvents(form.value, app.currentUser.name))
+    activityStatus.value = 'loaded'
+  } catch {
+    activityStatus.value = 'error'
+  }
+}
+const activity = { data: activityEvents, status: activityStatus, load: loadActivity }
 
 watch(page, (value) => {
   if (value) {
@@ -26,6 +42,7 @@ watch(page, (value) => {
     lastSavedAt.value = value.updatedAt
     history.value = [JSON.stringify(form.value.blocks)]
     historyIndex.value = 0
+    loadActivity()
   }
 }, { immediate: true })
 
@@ -213,6 +230,7 @@ const CATEGORY_ICON: Record<PageBlockCategory, string> = {
             <UButton icon="i-lucide-redo-2" color="neutral" variant="ghost" :disabled="!canRedo" aria-label="Redo" @click="redo" />
           </UTooltip>
           <UButton label="Add block" icon="i-lucide-plus" color="neutral" variant="outline" @click="libraryOpen = true" />
+          <UButton label="Preview" icon="i-lucide-eye" color="neutral" variant="outline" @click="previewOpen = true" />
         </template>
 
         <!-- Canvas -->
@@ -264,6 +282,15 @@ const CATEGORY_ICON: Record<PageBlockCategory, string> = {
           </TransitionGroup>
         </section>
 
+        <CommonCommentThread resource-type="page" :resource-id="id" />
+
+        <UCard>
+          <template #header>
+            <h2 class="type-h3">Activity</h2>
+          </template>
+          <CommonActivityTimeline :events="activity.data.value ?? []" :status="activity.status.value" @retry="activity.load" />
+        </UCard>
+
         <template #aside>
           <!-- Inspector -->
           <UCard :ui="{ body: 'space-y-4' }">
@@ -308,6 +335,15 @@ const CATEGORY_ICON: Record<PageBlockCategory, string> = {
           <EditorsSeoPanel v-model="form.seo" />
         </template>
       </EditorsEditorShell>
+
+      <CommonPreviewModal v-if="form" v-model:open="previewOpen" :status="form.status" :description="`How “${form.title}” reads on the public site.`">
+        <template #default>
+          <div v-for="block in form.blocks.filter(b => !b.hidden)" :key="block.id" class="border-b border-default pb-6 last:border-0">
+            <p class="type-overline">{{ block.label }}</p>
+            <p class="type-body mt-2 text-muted">{{ block.content }}</p>
+          </div>
+        </template>
+      </CommonPreviewModal>
 
       <!-- Block library -->
       <USlideover v-model:open="libraryOpen" title="Block library" description="Composable sections for the public site.">

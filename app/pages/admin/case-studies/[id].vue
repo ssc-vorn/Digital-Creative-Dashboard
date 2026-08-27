@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import { watchDebounced } from '@vueuse/core'
-import type { CaseStudy, CaseStudyBlock, ContentStatus } from '~/types'
+import type { ActivityEvent, CaseStudy, CaseStudyBlock, ContentStatus } from '~/types'
 import { caseStudyRepository } from '~/repositories/content'
+import { activityRepository, baseLifecycleEvents } from '~/repositories/activity'
 import { useAppStore } from '~/stores/app'
 
 const route = useRoute()
@@ -19,6 +20,20 @@ const snapshot = ref('')
 
 const lastSavedAt = ref<string | null>(null)
 
+const activityEvents = ref<ActivityEvent[]>([])
+const activityStatus = ref<'idle' | 'loading' | 'loaded' | 'error'>('idle')
+async function loadActivity() {
+  if (!form.value) return
+  activityStatus.value = 'loading'
+  try {
+    activityEvents.value = await activityRepository.list(form.value.title, baseLifecycleEvents(form.value, app.currentUser.name))
+    activityStatus.value = 'loaded'
+  } catch {
+    activityStatus.value = 'error'
+  }
+}
+const activity = { data: activityEvents, status: activityStatus, load: loadActivity }
+
 watch(study, (value) => {
   if (value) {
     form.value = structuredClone(toRaw(value))
@@ -26,6 +41,7 @@ watch(study, (value) => {
     history.value = [JSON.stringify(form.value.blocks)]
     historyIndex.value = 0
     lastSavedAt.value = value.updatedAt
+    loadActivity()
   }
 }, { immediate: true })
 
@@ -163,8 +179,6 @@ function onDrop(index: number) {
 /* -------------------------------- Preview ------------------------------ */
 
 const previewOpen = ref(false)
-const previewWidth = ref<'mobile' | 'tablet' | 'desktop'>('desktop')
-const PREVIEW_WIDTHS = { mobile: '375px', tablet: '768px', desktop: '100%' }
 
 const BLOCK_ICONS: Record<string, string> = {
   'hero': 'i-lucide-panel-top',
@@ -278,6 +292,15 @@ const BLOCK_ICONS: Record<string, string> = {
           :on-restore="(v: number) => caseStudyRepository.restoreVersion(id, v)"
         />
 
+        <CommonCommentThread resource-type="case-study" :resource-id="id" />
+
+        <UCard>
+          <template #header>
+            <h2 class="type-h3">Activity</h2>
+          </template>
+          <CommonActivityTimeline :events="activity.data.value ?? []" :status="activity.status.value" @retry="activity.load" />
+        </UCard>
+
         <template #aside>
           <EditorsPublishPanel
             :status="form.status"
@@ -290,37 +313,19 @@ const BLOCK_ICONS: Record<string, string> = {
       </EditorsEditorShell>
 
       <!-- Editorial preview -->
-      <UModal v-model:open="previewOpen" title="Preview" description="How the story reads on the public site." fullscreen :ui="{ body: 'bg-elevated/50 p-4 sm:p-8' }">
-        <template #body>
-          <div class="mb-4 flex justify-center gap-1">
-            <UButton
-              v-for="w in (['mobile', 'tablet', 'desktop'] as const)"
-              :key="w"
-              :icon="w === 'mobile' ? 'i-lucide-smartphone' : w === 'tablet' ? 'i-lucide-tablet' : 'i-lucide-monitor'"
-              size="sm"
-              :color="previewWidth === w ? 'primary' : 'neutral'"
-              :variant="previewWidth === w ? 'soft' : 'ghost'"
-              :aria-label="`Preview at ${w} width`"
-              @click="previewWidth = w"
-            />
-          </div>
-          <div
-            v-if="form"
-            class="mx-auto max-w-3xl space-y-10 rounded-lg border border-default bg-default p-6 transition-all sm:p-10"
-            :style="{ maxWidth: PREVIEW_WIDTHS[previewWidth] }"
-          >
-            <header>
-              <p class="type-overline">{{ form.clientName }}</p>
-              <h1 class="type-display mt-2">{{ form.title }}</h1>
-              <p class="type-body-lg mt-3 text-muted">{{ form.excerpt }}</p>
-            </header>
-            <section v-for="block in form.blocks.filter(b => !b.hidden)" :key="block.id">
-              <h2 class="type-h2">{{ block.title }}</h2>
-              <p class="type-body mt-2 text-muted">{{ block.body }}</p>
-            </section>
-          </div>
+      <CommonPreviewModal v-if="form" v-model:open="previewOpen" :status="form.status" :description="`How “${form.title}” reads on the public site.`">
+        <template #default>
+          <header>
+            <p class="type-overline">{{ form.clientName }}</p>
+            <h1 class="type-display mt-2">{{ form.title }}</h1>
+            <p class="type-body-lg mt-3 text-muted">{{ form.excerpt }}</p>
+          </header>
+          <section v-for="block in form.blocks.filter(b => !b.hidden)" :key="block.id" class="mt-8">
+            <h2 class="type-h2">{{ block.title }}</h2>
+            <p class="type-body mt-2 text-muted">{{ block.body }}</p>
+          </section>
         </template>
-      </UModal>
+      </CommonPreviewModal>
     </div>
   </LayoutAdminPage>
 </template>

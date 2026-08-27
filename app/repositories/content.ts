@@ -44,6 +44,9 @@ export const caseStudyRepository = {
   async publish(id: string): Promise<CaseStudy> {
     return caseStudyCrud.update(id, { status: 'published' })
   },
+  async archive(id: string): Promise<CaseStudy> {
+    return caseStudyCrud.update(id, { status: 'archived' })
+  },
   async duplicate(id: string): Promise<CaseStudy> {
     const source = caseStudyCrud.all().find(c => c.id === id)
     if (!source) throw new Error('Case study not found')
@@ -104,6 +107,9 @@ export const blogRepository = {
   },
   async schedule(id: string, date: string): Promise<BlogPost> {
     return blogCrud.update(id, { status: 'scheduled', scheduledFor: date })
+  },
+  async archive(id: string): Promise<BlogPost> {
+    return blogCrud.update(id, { status: 'archived' })
   },
   async revisions(id: string): Promise<Revision[]> {
     const item = blogCrud.all().find(c => c.id === id)
@@ -182,5 +188,8 @@ export const pageRepository = {
   blockLibrary: PAGE_BLOCK_LIBRARY,
   async publish(id: string): Promise<SitePage> {
     return pageCrud.update(id, { status: 'published' })
+  },
+  async archive(id: string): Promise<SitePage> {
+    return pageCrud.update(id, { status: 'archived' })
   }
 }

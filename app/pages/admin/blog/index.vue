@@ -1,13 +1,23 @@
 <script setup lang="ts">
 import type { DropdownMenuItem } from '@nuxt/ui'
 import type { BlogPost } from '~/types'
+import { makeSeo } from '~/mock-data/shared'
+import { slugify } from '~/utils/format'
 import { blogRepository } from '~/repositories/content'
 import { teamRepository } from '~/repositories/operations'
 import { useAppStore } from '~/stores/app'
+import { CommonDuplicateModal } from '#components'
 
 const app = useAppStore()
 const route = useRoute()
-const toast = useToast()
+const overlay = useOverlay()
+
+const previewPost = ref<BlogPost | null>(null)
+const previewOpen = ref(false)
+function openPreview(post: BlogPost) {
+  previewPost.value = post
+  previewOpen.value = true
+}
 
 const collection = useCollection<BlogPost>(query => blogRepository.list(query), {
   pageSize: 10,
@@ -58,6 +68,7 @@ onMounted(() => {
 /* -------------------------------- Actions -------------------------------- */
 
 const publish = useMutation((id: string) => blogRepository.publish(id), { success: 'Post published', onSuccess: () => collection.reload() })
+const archive = useMutation((id: string) => blogRepository.archive(id), { success: 'Post archived', onSuccess: () => collection.reload() })
 
 async function bulkPublish(ids: string[], clear: () => void) {
   await Promise.all(ids.map(id => blogRepository.publish(id)))
@@ -70,14 +81,46 @@ const { moveToTrash } = useTrashAction(blogRepository, {
   onDone: () => collection.reload()
 })
 
+const duplicateModal = overlay.create(CommonDuplicateModal)
+async function openDuplicate(post: BlogPost) {
+  const created = await duplicateModal.open({
+    resourceLabel: 'Post',
+    sourceTitle: post.title,
+    options: [
+      { key: 'content', label: 'Content', description: 'Body copy', default: true },
+      { key: 'seo', label: 'SEO', description: 'Meta title, description and social preview', default: true },
+      { key: 'tags', label: 'Tags', default: true }
+    ],
+    onConfirm: (title, selected) => blogRepository.create({
+      ...structuredClone(toRaw(post)),
+      title,
+      slug: slugify(title),
+      status: 'draft',
+      publishedAt: null,
+      scheduledFor: null,
+      views: 0,
+      content: selected.content ? post.content : '',
+      seo: selected.seo ? { ...post.seo, slug: slugify(title) } : makeSeo(title, `journal/${slugify(title)}`, 35),
+      tags: selected.tags ? post.tags : []
+    } as Partial<BlogPost>)
+  }).result
+  if (created) collection.reload()
+}
+
 function rowActions(post: BlogPost): DropdownMenuItem[][] {
   return [
     [
       { label: 'Edit', icon: 'i-lucide-pen-line', to: `/admin/blog/${post.id}` },
-      { label: 'Preview', icon: 'i-lucide-external-link', onSelect: () => toast.add({ title: 'Preview opens the public site once it exists', icon: 'i-lucide-info' }) },
+      { label: 'Preview', icon: 'i-lucide-eye', onSelect: () => openPreview(post) },
+      { label: 'Duplicate', icon: 'i-lucide-copy', onSelect: () => openDuplicate(post) },
       ...(app.can('publish') && post.status !== 'published' ? [{ label: 'Publish', icon: 'i-lucide-send', onSelect: () => publish.run(post.id) }] : [])
     ],
-    [{ label: 'Move to Trash', icon: 'i-lucide-trash-2', color: 'error' as const, onSelect: () => moveToTrash(post) }]
+    [
+      ...(post.status === 'archived'
+        ? [{ label: 'Restore from Archive', icon: 'i-lucide-archive-restore', onSelect: () => blogRepository.update(post.id, { status: 'draft' }).then(() => collection.reload()) }]
+        : [{ label: 'Archive', icon: 'i-lucide-archive', onSelect: () => archive.run(post.id) }]),
+      { label: 'Move to Trash', icon: 'i-lucide-trash-2', color: 'error' as const, onSelect: () => moveToTrash(post) }
+    ]
   ]
 }
 </script>
@@ -153,6 +196,19 @@ function rowActions(post: BlogPost): DropdownMenuItem[][] {
         </template>
       </CommonDataTable>
     </div>
+
+    <CommonPreviewModal v-if="previewPost" v-model:open="previewOpen" :status="previewPost.status" :description="`How “${previewPost.title}” reads on the public site.`">
+      <template #default>
+        <header>
+          <p class="type-overline">{{ previewPost.category }}</p>
+          <h1 class="type-display mt-2">{{ previewPost.title }}</h1>
+          <p class="type-body-lg mt-3 text-muted">{{ previewPost.excerpt }}</p>
+        </header>
+        <section class="mt-8">
+          <p class="type-body whitespace-pre-line text-muted">{{ previewPost.content }}</p>
+        </section>
+      </template>
+    </CommonPreviewModal>
 
     <!-- Create modal -->
     <UModal v-model:open="createOpen" title="New blog post" description="Start a draft; the editor covers everything else.">
