@@ -29,10 +29,7 @@ const emit = defineEmits<{
     <div class="flex flex-wrap gap-2" role="group" aria-label="Filter by category">
       <button
         type="button"
-        class="rounded-full border px-4 py-1.5 text-sm font-medium transition-colors"
-        :style="props.modelCategory === null
-          ? { backgroundColor: 'var(--brand-ink)', color: 'var(--brand-paper)', borderColor: 'var(--brand-ink)' }
-          : { borderColor: 'var(--brand-border)', color: 'var(--brand-ink)' }"
+        :class="props.modelCategory === null ? 'site-pill-active' : 'site-pill'"
         :aria-pressed="props.modelCategory === null"
         @click="emit('update:modelCategory', null)"
       >
@@ -42,10 +39,7 @@ const emit = defineEmits<{
         v-for="category in props.categories"
         :key="category"
         type="button"
-        class="rounded-full border px-4 py-1.5 text-sm font-medium transition-colors"
-        :style="props.modelCategory === category
-          ? { backgroundColor: 'var(--brand-ink)', color: 'var(--brand-paper)', borderColor: 'var(--brand-ink)' }
-          : { borderColor: 'var(--brand-border)', color: 'var(--brand-ink)' }"
+        :class="props.modelCategory === category ? 'site-pill-active' : 'site-pill'"
         :aria-pressed="props.modelCategory === category"
         @click="emit('update:modelCategory', category)"
       >

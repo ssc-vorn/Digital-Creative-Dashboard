@@ -200,6 +200,17 @@
     color: var(--brand-ink);
     outline-color: var(--brand-accent);
   }
+  .site-pill {
+    @apply rounded-full border px-4 py-1.5 text-sm font-medium transition-colors;
+    border-color: var(--brand-border);
+    color: var(--brand-ink);
+  }
+  .site-pill-active {
+    @apply rounded-full border px-4 py-1.5 text-sm font-medium transition-colors;
+    background-color: var(--brand-ink);
+    border-color: var(--brand-ink);
+    color: var(--brand-paper);
+  }
 }
 
 /* Scroll-reveal: fades and lifts content into place once it enters view. */

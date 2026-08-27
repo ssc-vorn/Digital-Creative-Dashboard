@@ -150,7 +150,7 @@ function startOver() {
         </div>
         <div class="h-1 w-full overflow-hidden rounded-full" style="background-color: var(--brand-border)">
           <div
-            class="h-full rounded-full transition-all duration-300 ease-out"
+            class="h-full rounded-full transition-[width] duration-300 ease-out"
             :style="{ backgroundColor: 'var(--brand-accent)', width: `${(step / TOTAL_STEPS) * 100}%` }"
           />
         </div>
@@ -165,7 +165,7 @@ function startOver() {
               v-for="option in NEED_OPTIONS"
               :key="option.value"
               type="button"
-              class="flex items-start gap-3 rounded-lg border p-4 text-left transition-colors"
+              class="flex items-start gap-3 rounded-sm border p-4 text-left transition-colors"
               :style="form.need === option.value
                 ? { borderColor: 'var(--brand-accent)', backgroundColor: 'color-mix(in oklab, var(--brand-accent) 10%, transparent)' }
                 : { borderColor: 'var(--brand-border)' }"
@@ -192,10 +192,7 @@ function startOver() {
                 v-for="opt in followUp.options"
                 :key="opt"
                 type="button"
-                class="rounded-full border px-4 py-1.5 text-sm font-medium transition-colors"
-                :style="form.needFollowUp === opt
-                  ? { backgroundColor: 'var(--brand-ink)', color: 'var(--brand-paper)', borderColor: 'var(--brand-ink)' }
-                  : { borderColor: 'var(--brand-border)' }"
+                :class="form.needFollowUp === opt ? 'site-pill-active' : 'site-pill'"
                 @click="form.needFollowUp = opt; errors.needFollowUp = ''"
               >
                 {{ opt }}
@@ -224,10 +221,7 @@ function startOver() {
               v-for="opt in TIMELINE_OPTIONS"
               :key="opt"
               type="button"
-              class="rounded-full border px-5 py-2 text-sm font-medium transition-colors"
-              :style="form.timeline === opt
-                ? { backgroundColor: 'var(--brand-ink)', color: 'var(--brand-paper)', borderColor: 'var(--brand-ink)' }
-                : { borderColor: 'var(--brand-border)' }"
+              :class="form.timeline === opt ? 'site-pill-active' : 'site-pill'"
               @click="form.timeline = opt; errors.timeline = ''"
             >
               {{ opt }}
@@ -244,10 +238,7 @@ function startOver() {
               v-for="opt in BUDGET_OPTIONS"
               :key="opt"
               type="button"
-              class="rounded-full border px-5 py-2 text-sm font-medium transition-colors"
-              :style="form.budget === opt
-                ? { backgroundColor: 'var(--brand-ink)', color: 'var(--brand-paper)', borderColor: 'var(--brand-ink)' }
-                : { borderColor: 'var(--brand-border)' }"
+              :class="form.budget === opt ? 'site-pill-active' : 'site-pill'"
               @click="form.budget = opt; errors.budget = ''"
             >
               {{ opt }}

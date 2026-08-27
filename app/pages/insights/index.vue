@@ -54,10 +54,7 @@ useSeoMeta({
       <div class="mb-14 flex flex-wrap items-center gap-2 border-b pb-8" :style="{ borderColor: 'var(--brand-border)' }">
         <button
           type="button"
-          class="rounded-full border px-4 py-1.5 text-sm font-medium transition-colors"
-          :style="category === null
-            ? { backgroundColor: 'var(--brand-ink)', color: 'var(--brand-paper)', borderColor: 'var(--brand-ink)' }
-            : { borderColor: 'var(--brand-border)', color: 'var(--brand-ink)' }"
+          :class="category === null ? 'site-pill-active' : 'site-pill'"
           @click="category = null"
         >
           All topics
@@ -66,10 +63,7 @@ useSeoMeta({
           v-for="c in categories"
           :key="c"
           type="button"
-          class="rounded-full border px-4 py-1.5 text-sm font-medium transition-colors"
-          :style="category === c
-            ? { backgroundColor: 'var(--brand-ink)', color: 'var(--brand-paper)', borderColor: 'var(--brand-ink)' }
-            : { borderColor: 'var(--brand-border)', color: 'var(--brand-ink)' }"
+          :class="category === c ? 'site-pill-active' : 'site-pill'"
           @click="category = c"
         >
           {{ c }}
@@ -81,10 +75,8 @@ useSeoMeta({
           v-for="y in years"
           :key="y"
           type="button"
-          class="rounded-full border px-4 py-1.5 text-sm font-medium tabular-nums transition-colors"
-          :style="year === y
-            ? { backgroundColor: 'var(--brand-ink)', color: 'var(--brand-paper)', borderColor: 'var(--brand-ink)' }
-            : { borderColor: 'var(--brand-border)', color: 'var(--brand-ink)' }"
+          class="tabular-nums"
+          :class="year === y ? 'site-pill-active' : 'site-pill'"
           @click="year = year === y ? null : y"
         >
           {{ y }}
