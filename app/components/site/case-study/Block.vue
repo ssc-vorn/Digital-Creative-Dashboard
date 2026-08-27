@@ -32,7 +32,14 @@ defineProps<{ block: CaseStudyBlock }>()
     </div>
 
     <!-- Gallery (horizontal scroll) -->
-    <div v-else-if="block.type === 'gallery'" class="flex gap-4 overflow-x-auto pb-2" style="scroll-snap-type: x mandatory">
+    <div
+      v-else-if="block.type === 'gallery'"
+      class="flex gap-4 overflow-x-auto pb-2"
+      style="scroll-snap-type: x mandatory"
+      role="region"
+      aria-label="Project gallery, scroll to see more"
+      tabindex="0"
+    >
       <div
         v-for="(m, i) in block.media ?? []"
         :key="i"

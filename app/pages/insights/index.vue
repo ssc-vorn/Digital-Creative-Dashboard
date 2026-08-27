@@ -4,6 +4,8 @@ import { insightRepository } from '~/repositories/site/insights'
 definePageMeta({ layout: 'public' })
 
 const { data: allInsights, status, refresh } = useAsyncData('insights-index', () => insightRepository.getInsights())
+const { data: featuredList } = useAsyncData('insights-index-featured', () => insightRepository.getFeaturedInsights())
+const featured = computed(() => featuredList.value?.[0] ?? null)
 
 const category = ref<string | null>(null)
 const year = ref<number | null>(null)
@@ -12,6 +14,7 @@ const categories = computed(() => Array.from(new Set((allInsights.value ?? []).m
 const years = computed(() => Array.from(new Set((allInsights.value ?? []).map(i => new Date(i.date).getFullYear()))).sort((a, b) => b - a))
 
 const filtered = computed(() => (allInsights.value ?? []).filter((i) => {
+  if (featured.value && i.id === featured.value.id) return false
   if (category.value && i.category !== category.value) return false
   if (year.value && new Date(i.date).getFullYear() !== year.value) return false
   return true
@@ -51,6 +54,8 @@ useSeoMeta({
     </div>
 
     <template v-else>
+      <SiteInsightsInsightCard v-if="featured" :insight="featured" featured class="mb-16" />
+
       <div class="mb-14 flex flex-wrap items-center gap-2 border-b pb-8" :style="{ borderColor: 'var(--brand-border)' }">
         <button
           type="button"

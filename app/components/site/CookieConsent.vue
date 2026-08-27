@@ -7,7 +7,11 @@ interface ConsentPrefs {
   marketing: boolean
 }
 
-const consent = useLocalStorage<ConsentPrefs>('site-cookie-consent', { decided: false, analytics: false, marketing: false })
+const consent = useLocalStorage<ConsentPrefs>(
+  'site-cookie-consent',
+  { decided: false, analytics: false, marketing: false },
+  { initOnMounted: true }
+)
 const managing = ref(false)
 const draft = reactive({ analytics: consent.value.analytics, marketing: consent.value.marketing })
 
