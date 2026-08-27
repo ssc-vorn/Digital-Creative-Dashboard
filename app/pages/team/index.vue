@@ -26,87 +26,91 @@ useSeoMeta({
 </script>
 
 <template>
-  <div class="site-container pb-24 pt-32 sm:pb-32 sm:pt-40">
-    <header class="mb-14 max-w-3xl">
-      <p class="site-eyebrow mb-4">Team</p>
-      <h1 class="site-h1">The people doing the work, not just presenting it.</h1>
-    </header>
+  <div>
+    <div class="site-container pb-24 pt-32 sm:pb-32 sm:pt-40">
+      <header class="mb-14 max-w-3xl">
+        <p class="site-eyebrow mb-4">Team</p>
+        <h1 class="site-h1">The people doing the work, not just presenting it.</h1>
+      </header>
 
-    <div v-if="status === 'pending'" class="grid grid-cols-2 gap-10 sm:grid-cols-3 lg:grid-cols-4">
-      <div v-for="i in 6" :key="i" class="space-y-4">
-        <div class="size-20 animate-pulse rounded-full" style="background-color: var(--brand-border)" />
-        <div class="h-4 w-2/3 animate-pulse rounded-sm" style="background-color: var(--brand-border)" />
+      <div v-if="status === 'pending'" class="grid grid-cols-2 gap-10 sm:grid-cols-3 lg:grid-cols-4">
+        <div v-for="i in 6" :key="i" class="space-y-4">
+          <div class="size-20 animate-pulse rounded-full" style="background-color: var(--brand-border)" />
+          <div class="h-4 w-2/3 animate-pulse rounded-sm" style="background-color: var(--brand-border)" />
+        </div>
       </div>
+
+      <template v-else>
+        <section class="mb-20">
+          <p v-reveal class="site-eyebrow mb-10">Leadership</p>
+          <div class="grid grid-cols-1 gap-10 sm:grid-cols-3">
+            <button
+              v-for="(person, index) in leadership"
+              :key="person.id"
+              v-reveal
+              type="button"
+              class="group text-left"
+              :style="{ animationDelay: `${index * 60}ms` }"
+              @click="viewProfile(person)"
+            >
+              <span
+                class="flex size-24 items-center justify-center rounded-full font-display text-2xl font-medium text-white transition-transform group-hover:scale-105"
+                :style="{ backgroundColor: person.avatarColor }"
+              >
+                {{ person.initials }}
+              </span>
+              <p class="site-h2 mt-5 transition-opacity group-hover:opacity-70">{{ person.name }}</p>
+              <p class="site-caption mt-1">{{ person.role }}</p>
+              <p class="site-body mt-3 max-w-xs">{{ person.specialty }}</p>
+            </button>
+          </div>
+        </section>
+
+        <section v-if="wider.length">
+          <p v-reveal class="site-eyebrow mb-10">The wider team</p>
+          <div class="grid grid-cols-2 gap-x-6 gap-y-14 sm:grid-cols-3 lg:grid-cols-4">
+            <button
+              v-for="(person, index) in wider"
+              :key="person.id"
+              v-reveal
+              type="button"
+              class="group text-left"
+              :style="{ animationDelay: `${index * 60}ms` }"
+              @click="viewProfile(person)"
+            >
+              <span
+                class="flex size-20 items-center justify-center rounded-full font-display text-xl font-medium text-white transition-transform group-hover:scale-105"
+                :style="{ backgroundColor: person.avatarColor }"
+              >
+                {{ person.initials }}
+              </span>
+              <p class="site-h3 mt-4 transition-opacity group-hover:opacity-70">{{ person.name }}</p>
+              <p class="site-caption mt-1">{{ person.role }}</p>
+            </button>
+          </div>
+        </section>
+      </template>
+
+      <UModal v-model:open="open" :title="selected?.name" :ui="{ content: 'site bg-[var(--brand-surface)] text-[var(--brand-ink)]' }">
+        <template #body>
+          <div v-if="selected" class="site space-y-4">
+            <span
+              class="flex size-16 items-center justify-center rounded-full font-display text-lg font-medium text-white"
+              :style="{ backgroundColor: selected.avatarColor }"
+            >
+              {{ selected.initials }}
+            </span>
+            <p class="site-body font-medium">{{ selected.role }}</p>
+            <p class="site-caption">{{ selected.specialty }}</p>
+            <p class="site-body-lg">{{ selected.bio }}</p>
+          </div>
+        </template>
+      </UModal>
     </div>
 
-    <template v-else>
-      <section class="mb-20">
-        <p v-reveal class="site-eyebrow mb-10">Leadership</p>
-        <div class="grid grid-cols-1 gap-10 sm:grid-cols-3">
-          <button
-            v-for="(person, index) in leadership"
-            :key="person.id"
-            v-reveal
-            type="button"
-            class="group text-left"
-            :style="{ animationDelay: `${index * 60}ms` }"
-            @click="viewProfile(person)"
-          >
-            <span
-              class="flex size-24 items-center justify-center rounded-full font-display text-2xl font-medium text-white transition-transform group-hover:scale-105"
-              :style="{ backgroundColor: person.avatarColor }"
-            >
-              {{ person.initials }}
-            </span>
-            <p class="site-h2 mt-5 transition-opacity group-hover:opacity-70">{{ person.name }}</p>
-            <p class="site-caption mt-1">{{ person.role }}</p>
-            <p class="site-body mt-3 max-w-xs">{{ person.specialty }}</p>
-          </button>
-        </div>
-      </section>
-
-      <section v-if="wider.length">
-        <p v-reveal class="site-eyebrow mb-10">The wider team</p>
-        <div class="grid grid-cols-2 gap-x-6 gap-y-14 sm:grid-cols-3 lg:grid-cols-4">
-          <button
-            v-for="(person, index) in wider"
-            :key="person.id"
-            v-reveal
-            type="button"
-            class="group text-left"
-            :style="{ animationDelay: `${index * 60}ms` }"
-            @click="viewProfile(person)"
-          >
-            <span
-              class="flex size-20 items-center justify-center rounded-full font-display text-xl font-medium text-white transition-transform group-hover:scale-105"
-              :style="{ backgroundColor: person.avatarColor }"
-            >
-              {{ person.initials }}
-            </span>
-            <p class="site-h3 mt-4 transition-opacity group-hover:opacity-70">{{ person.name }}</p>
-            <p class="site-caption mt-1">{{ person.role }}</p>
-          </button>
-        </div>
-      </section>
-    </template>
-
-    <UModal v-model:open="open" :ui="{ content: 'site bg-[var(--brand-surface)] text-[var(--brand-ink)]' }">
-      <template #body>
-        <div v-if="selected" class="site space-y-4">
-          <span
-            class="flex size-16 items-center justify-center rounded-full font-display text-lg font-medium text-white"
-            :style="{ backgroundColor: selected.avatarColor }"
-          >
-            {{ selected.initials }}
-          </span>
-          <div>
-            <p class="site-h3">{{ selected.name }}</p>
-            <p class="site-caption mt-0.5">{{ selected.role }}</p>
-          </div>
-          <p class="site-caption">{{ selected.specialty }}</p>
-          <p class="site-body-lg">{{ selected.bio }}</p>
-        </div>
-      </template>
-    </UModal>
+    <SiteCtaBanner
+      heading="Like the sound of the people behind this?"
+      subtext="Tell us what you're building. We'll tell you which of us would be on the team."
+    />
   </div>
 </template>
