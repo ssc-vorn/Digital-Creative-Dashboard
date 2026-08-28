@@ -12,10 +12,15 @@ const isHome = computed(() => route.path === '/')
 
 const solid = computed(() => y.value > 24 || !isHome.value || mobileOpen.value)
 
-// Neutral until color-mode resolves, so the label never contradicts the icon
-// and never differs between the server and the hydrating client.
+// The resolved mode is unknowable during SSR, so the label stays neutral until
+// mount: that keeps it identical on the server and the hydrating client, and
+// stops it asserting a direction that may be wrong. Gated on mount rather than
+// colorMode.unknown, which does not reliably flip in every shell.
+const mounted = ref(false)
+onMounted(() => { mounted.value = true })
+
 const themeToggleLabel = computed(() => {
-  if (colorMode.unknown) return 'Switch colour theme'
+  if (!mounted.value) return 'Switch colour theme'
   return colorMode.value === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'
 })
 
