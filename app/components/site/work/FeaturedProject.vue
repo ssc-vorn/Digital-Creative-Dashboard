@@ -7,6 +7,7 @@ defineProps<{ project: SiteProject }>()
 <template>
   <NuxtLink
     v-reveal
+    v-cursor="'view'"
     :to="`/work/${project.slug}`"
     class="group relative flex aspect-[4/3] w-full items-end overflow-hidden sm:aspect-[21/9]"
     :style="{ backgroundColor: project.coverColor }"

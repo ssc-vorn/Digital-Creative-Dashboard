@@ -20,9 +20,14 @@ const preview = computed(() => (services.value ?? []).slice(0, 6))
       <li v-for="(service, index) in preview" :key="service.id" v-reveal :style="{ animationDelay: `${index * 60}ms` }">
         <NuxtLink
           :to="`/services/${service.slug}`"
-          class="group flex flex-col gap-3 border-b py-7 transition-colors sm:flex-row sm:items-center sm:gap-8"
+          class="group relative flex flex-col gap-3 border-b py-7 transition-[padding-left] duration-300 hover:pl-4 focus-visible:pl-4 sm:flex-row sm:items-center sm:gap-8"
           :style="{ borderColor: 'var(--brand-border)' }"
         >
+          <span
+            class="absolute inset-y-0 left-0 w-0.5 origin-top scale-y-0 transition-transform duration-300 group-hover:scale-y-100 group-focus-visible:scale-y-100"
+            :style="{ backgroundColor: 'var(--brand-accent)' }"
+            aria-hidden="true"
+          />
           <span class="site-caption w-10 shrink-0 tabular-nums">{{ String(index + 1).padStart(2, '0') }}</span>
           <UIcon :name="service.icon" class="size-5 shrink-0" style="color: var(--brand-accent)" />
           <span class="site-h3 flex-1 transition-opacity group-hover:opacity-70">{{ service.name }}</span>

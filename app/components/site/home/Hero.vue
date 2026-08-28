@@ -41,8 +41,8 @@ onMounted(() => {
         identity, campaigns, and digital experience, under one roof.
       </p>
       <div ref="ctaRef" class="mt-10 flex flex-wrap gap-4">
-        <NuxtLink to="/contact" class="site-btn-primary">
-          Start a Project
+        <NuxtLink v-magnetic v-cursor="'open'" to="/contact" class="site-btn-primary group">
+          Start a Project <UIcon name="i-lucide-arrow-right" class="size-4 transition-transform duration-200 group-hover:translate-x-0.5" />
         </NuxtLink>
         <NuxtLink to="/work" class="site-btn-ghost border-white/25 text-white hover:bg-white/10">
           View Our Work

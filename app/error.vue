@@ -65,5 +65,6 @@ if (!isAdmin.value) {
     <SiteFooter />
     <SiteCookieConsent />
     <SiteBackToTop />
+    <SiteCursor />
   </div>
 </template>

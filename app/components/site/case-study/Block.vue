@@ -34,6 +34,7 @@ defineProps<{ block: CaseStudyBlock }>()
     <!-- Gallery (horizontal scroll) -->
     <div
       v-else-if="block.type === 'gallery'"
+      v-cursor="'drag'"
       class="flex gap-4 overflow-x-auto pb-2"
       style="scroll-snap-type: x mandatory"
       role="region"
@@ -50,7 +51,7 @@ defineProps<{ block: CaseStudyBlock }>()
 
     <!-- Video (mock: color panel with play affordance) -->
     <figure v-else-if="block.type === 'video'">
-      <div class="group relative aspect-video w-full overflow-hidden rounded-sm" :style="{ backgroundColor: block.media?.[0]?.color ?? 'var(--brand-ink)' }">
+      <div v-cursor="'play'" class="group relative aspect-video w-full overflow-hidden rounded-sm" :style="{ backgroundColor: block.media?.[0]?.color ?? 'var(--brand-ink)' }">
         <div class="absolute inset-0 flex items-center justify-center">
           <span class="flex size-16 items-center justify-center rounded-full bg-white/90 transition-transform group-hover:scale-105">
             <UIcon name="i-lucide-play" class="ms-1 size-6 text-black" />

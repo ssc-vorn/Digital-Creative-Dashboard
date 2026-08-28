@@ -22,5 +22,6 @@ useHead({
     <SiteFooter />
     <SiteCookieConsent />
     <SiteBackToTop />
+    <SiteCursor />
   </div>
 </template>

@@ -14,7 +14,7 @@ const project = computed(() => featured.value?.[0] ?? null)
 
       <div v-if="status === 'pending'" class="h-[32rem] animate-pulse rounded-sm" style="background-color: var(--brand-border)" />
 
-      <NuxtLink v-else-if="project" v-reveal :to="`/work/${project.slug}`" class="group grid gap-10 lg:grid-cols-2 lg:items-center lg:gap-16">
+      <NuxtLink v-else-if="project" v-reveal v-cursor="'view'" :to="`/work/${project.slug}`" class="group grid gap-10 lg:grid-cols-2 lg:items-center lg:gap-16">
         <div class="relative aspect-[4/3] overflow-hidden rounded-sm lg:aspect-[5/4]" :style="{ backgroundColor: project.coverColor }">
           <div
             class="absolute inset-0 flex items-end p-6 opacity-0 transition-opacity duration-300 group-hover:opacity-100"

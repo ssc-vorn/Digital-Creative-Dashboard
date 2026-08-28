@@ -7,8 +7,9 @@ const props = withDefaults(defineProps<{ project: SiteProject, featured?: boolea
 </script>
 
 <template>
-  <NuxtLink v-reveal :to="`/work/${project.slug}`" class="group flex h-full flex-col">
+  <NuxtLink v-reveal v-cursor="'view'" :to="`/work/${project.slug}`" class="group flex h-full flex-col">
     <div
+      v-parallax-hover
       class="relative w-full overflow-hidden rounded-sm"
       :class="props.featured ? 'flex-1 min-h-64' : 'aspect-[4/3]'"
       :style="{ backgroundColor: project.coverColor }"

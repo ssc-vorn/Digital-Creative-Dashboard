@@ -18,8 +18,8 @@ withDefaults(defineProps<{
       <h2 v-reveal class="site-h1 max-w-2xl" style="color: var(--brand-contrast-ink)">{{ heading }}</h2>
       <div v-reveal class="max-w-sm" style="animation-delay: 100ms">
         <p class="site-body mb-6" style="color: color-mix(in oklab, var(--brand-contrast-ink) 65%, transparent)">{{ subtext }}</p>
-        <NuxtLink :to="ctaTo" class="site-btn-primary">
-          {{ ctaLabel }} <UIcon name="i-lucide-arrow-right" class="size-4" />
+        <NuxtLink v-magnetic v-cursor="'open'" :to="ctaTo" class="site-btn-primary group">
+          {{ ctaLabel }} <UIcon name="i-lucide-arrow-right" class="size-4 transition-transform duration-200 group-hover:translate-x-0.5" />
         </NuxtLink>
       </div>
     </div>
