@@ -1,9 +1,7 @@
 <script setup lang="ts">
-import { projectRepository } from '~/repositories/site/projects'
-
-// Same key as SelectedWork's fetch — shares the cached result instead of
-// triggering a second identical network round-trip for the same list.
-const { data: featured, status } = useAsyncData('home-featured-projects', () => projectRepository.getFeaturedProjects())
+// Shares SelectedWork's fetch instead of triggering a second identical
+// round-trip for the same list.
+const { data: featured, status } = useFeaturedProjects()
 const project = computed(() => featured.value?.[0] ?? null)
 </script>
 

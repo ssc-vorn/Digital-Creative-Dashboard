@@ -1,7 +1,5 @@
 <script setup lang="ts">
-import { projectRepository } from '~/repositories/site/projects'
-
-const { data: projects, status } = useAsyncData('home-featured-projects', () => projectRepository.getFeaturedProjects())
+const { data: projects, status } = useFeaturedProjects()
 </script>
 
 <template>

@@ -9,7 +9,15 @@ const { y } = useWindowScroll()
 const mobileOpen = ref(false)
 
 const isHome = computed(() => route.path === '/')
+
 const solid = computed(() => y.value > 24 || !isHome.value || mobileOpen.value)
+
+// Neutral until color-mode resolves, so the label never contradicts the icon
+// and never differs between the server and the hydrating client.
+const themeToggleLabel = computed(() => {
+  if (colorMode.unknown) return 'Switch colour theme'
+  return colorMode.value === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'
+})
 
 function isActive(to: string) {
   return to === '/' ? route.path === '/' : route.path.startsWith(to)
@@ -49,10 +57,18 @@ watch(() => route.fullPath, () => { mobileOpen.value = false })
           type="button"
           class="hidden size-9 items-center justify-center rounded-full transition-colors hover:bg-black/5 sm:flex dark:hover:bg-white/10"
           :style="{ color: !solid ? '#fff' : 'var(--brand-ink)' }"
-          :aria-label="colorMode.value === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'"
+          :aria-label="themeToggleLabel"
           @click="colorMode.preference = colorMode.value === 'dark' ? 'light' : 'dark'"
         >
-          <UIcon :name="colorMode.value === 'dark' ? 'i-lucide-sun' : 'i-lucide-moon'" class="size-4" />
+          <!-- Which icon to show is decided by CSS, not by colorMode.value.
+               The resolved mode is unknowable during SSR, and color-mode only
+               resolves it on app:mounted — so binding the icon to it both
+               mismatched on hydration and left dark-mode visitors looking at
+               the wrong icon from first paint until hydration finished. The
+               .dark class lands before first paint, so this is correct
+               immediately and cannot desync. -->
+          <UIcon name="i-lucide-moon" class="size-4 dark:hidden" />
+          <UIcon name="i-lucide-sun" class="hidden size-4 dark:block" />
         </button>
 
         <NuxtLink to="/contact" class="site-btn-primary hidden sm:inline-flex">
