@@ -1,0 +1,45 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+# A new push supersedes an in-flight run on the same ref; main is exempt so
+# every commit there keeps a result of its own.
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    name: Typecheck and build
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - uses: actions/checkout@v4
+
+      # Before setup-node, so its pnpm store cache has a pnpm to ask.
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      # Fails if the lockfile and package.json disagree, rather than silently
+      # resolving something the lockfile never pinned.
+      - run: pnpm install --frozen-lockfile
+
+      # Typecheck first: it is the faster of the two, so a type error reports
+      # in about a minute instead of after a full build. `nuxt prepare` has
+      # already run via postinstall, so .nuxt types exist.
+      - run: pnpm typecheck
+
+      - run: pnpm build

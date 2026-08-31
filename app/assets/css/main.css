@@ -1,0 +1,265 @@
+@import "tailwindcss";
+@import "@nuxt/ui";
+
+@theme static {
+  --font-sans: "Inter", ui-sans-serif, system-ui, -apple-system, sans-serif;
+  --font-display: "Fraunces", ui-serif, Georgia, serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
+}
+
+:root {
+  --ui-radius: 0.5rem;
+
+  /* Chart series colors — CVD-validated categorical order (light mode). */
+  --viz-1: #2a78d6;
+  --viz-2: #eb6834;
+  --viz-3: #1baf7a;
+  --viz-4: #eda100;
+  --viz-5: #e87ba4;
+}
+
+.dark {
+  /* Same hues re-stepped for the dark surface, validated as a set. */
+  --viz-1: #3987e5;
+  --viz-2: #d95926;
+  --viz-3: #199e70;
+  --viz-4: #c98500;
+  --viz-5: #d55181;
+}
+
+/* ------------------------------------------------------------------ */
+/* Typography scale — the app's editorial voice lives here, not in    */
+/* per-page font-size soup.                                           */
+/* ------------------------------------------------------------------ */
+@layer components {
+  .type-display {
+    @apply font-display text-3xl/tight font-medium tracking-tight text-highlighted sm:text-4xl/tight;
+  }
+  .type-h1 {
+    @apply text-2xl/8 font-semibold tracking-tight text-highlighted;
+  }
+  .type-h2 {
+    @apply text-lg/7 font-semibold tracking-tight text-highlighted;
+  }
+  .type-h3 {
+    @apply text-base/6 font-semibold text-highlighted;
+  }
+  .type-h4 {
+    @apply text-sm/5 font-semibold text-highlighted;
+  }
+  .type-body-lg {
+    @apply text-base/7 text-default;
+  }
+  .type-body {
+    @apply text-sm/6 text-default;
+  }
+  .type-body-sm {
+    @apply text-xs/5 text-muted;
+  }
+  .type-caption {
+    @apply text-xs/4 text-muted;
+  }
+  .type-label {
+    @apply text-xs/4 font-medium text-default;
+  }
+  .type-overline {
+    @apply text-[11px]/4 font-semibold uppercase tracking-[0.08em] text-muted;
+  }
+}
+
+/* Thin, quiet scrollbars everywhere. */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--ui-border-accented) transparent;
+}
+
+::selection {
+  background-color: var(--ui-primary);
+  color: var(--ui-bg);
+}
+
+/* Page transition: a calm fade + drift, disabled for reduced motion. */
+.page-enter-active,
+.page-leave-active {
+  transition: opacity 0.15s ease, transform 0.15s ease;
+}
+.page-enter-from {
+  opacity: 0;
+  transform: translateY(4px);
+}
+.page-leave-to {
+  opacity: 0;
+}
+
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.15s ease;
+}
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
+}
+
+/* List reordering (kanban, notifications) */
+.list-move {
+  transition: transform 0.2s ease;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* ------------------------------------------------------------------ */
+/* Public site (24 Seven Solution Advertising) — a distinct editorial */
+/* brand system, scoped to `.site` so it never leaks into the admin   */
+/* console's dashboard theme.                                         */
+/* ------------------------------------------------------------------ */
+.site {
+  --brand-ink: #101012;
+  --brand-paper: #f7f5f0;
+  --brand-surface: #ffffff;
+  --brand-accent: #ff4520;
+  --brand-accent-ink: #101012;
+  --brand-muted: #63605a;
+  --brand-border: #dedad0;
+
+  /* Fixed (non-theme-adaptive) pair for "signature dark moment" sections —
+     e.g. the CTA banner — that must render identically in light and dark
+     mode rather than inverting with the theme. */
+  --brand-contrast-bg: #101012;
+  --brand-contrast-ink: #f7f5f0;
+
+  background-color: var(--brand-paper);
+  color: var(--brand-ink);
+}
+
+.dark .site {
+  --brand-ink: #f3f1ec;
+  --brand-paper: #0c0c0d;
+  --brand-surface: #161618;
+  --brand-accent: #ff6a3d;
+  --brand-accent-ink: #101012;
+  --brand-muted: #9c988f;
+  --brand-border: #2a2a2c;
+}
+
+/* Consistent, visible keyboard focus everywhere in the public site — a
+   single fallback rather than hand-adding focus-visible utilities to
+   every custom pill/card/icon button (filters, form chips, avatars). */
+.site button:focus-visible,
+.site a:focus-visible,
+.site input:focus-visible,
+.site textarea:focus-visible,
+.site [tabindex]:focus-visible {
+  outline: 2px solid var(--brand-accent);
+  outline-offset: 2px;
+}
+
+@layer components {
+  .site-eyebrow {
+    @apply font-sans text-xs font-semibold uppercase tracking-[0.18em];
+    color: var(--brand-accent);
+  }
+  .site-display {
+    @apply font-display text-[2.75rem]/[1.02] font-medium tracking-tight sm:text-[4rem]/[0.98] lg:text-[5.5rem]/[0.96];
+  }
+  .site-h1 {
+    @apply font-display text-4xl/[1.08] font-medium tracking-tight sm:text-5xl/[1.05];
+  }
+  .site-h2 {
+    @apply font-display text-2xl/[1.15] font-medium tracking-tight sm:text-3xl/[1.12];
+  }
+  .site-h3 {
+    @apply font-display text-xl/[1.2] font-medium tracking-tight;
+  }
+  .site-body-lg {
+    @apply font-sans text-lg/8 sm:text-xl/9;
+    color: var(--brand-muted);
+  }
+  .site-body {
+    @apply font-sans text-base/7;
+    color: var(--brand-muted);
+  }
+  .site-caption {
+    @apply font-sans text-sm/6;
+    color: var(--brand-muted);
+  }
+  .site-container {
+    @apply mx-auto w-full max-w-[90rem] px-6 sm:px-10 lg:px-16;
+  }
+  .site-btn-primary {
+    @apply inline-flex items-center gap-2 rounded-full px-6 py-3 text-sm font-semibold transition-transform duration-200 ease-out hover:-translate-y-0.5 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2;
+    background-color: var(--brand-accent);
+    color: var(--brand-accent-ink);
+    outline-color: var(--brand-accent);
+  }
+  .site-btn-ghost {
+    @apply inline-flex items-center gap-2 rounded-full border px-6 py-3 text-sm font-semibold transition-transform duration-200 ease-out hover:-translate-y-0.5 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2;
+    border-color: var(--brand-border);
+    color: var(--brand-ink);
+    outline-color: var(--brand-accent);
+  }
+  .site-pill {
+    @apply rounded-full border px-4 py-1.5 text-sm font-medium transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2;
+    border-color: var(--brand-border);
+    color: var(--brand-ink);
+    outline-color: var(--brand-accent);
+  }
+  .site-pill-active {
+    @apply rounded-full border px-4 py-1.5 text-sm font-medium transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2;
+    background-color: var(--brand-ink);
+    border-color: var(--brand-ink);
+    color: var(--brand-paper);
+    outline-color: var(--brand-accent);
+  }
+}
+
+/* Scroll-reveal: fades and lifts content into place once it enters view. */
+.site-reveal {
+  opacity: 0;
+  transform: translateY(1.25rem);
+  transition: opacity 0.7s cubic-bezier(0.16, 1, 0.3, 1), transform 0.7s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.site-reveal.is-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+@media (prefers-reduced-motion: reduce) {
+  .site-reveal {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+}
+
+/* Filtered grids: items glide to their new positions when a filter changes,
+   instead of snapping. Only `move` is styled — entry is already owned by
+   v-reveal on the cards themselves, and animating both would double up. */
+.site-grid-move {
+  transition: transform 320ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.site-grid-leave-active {
+  display: none;
+}
+
+/* Clients marquee */
+@keyframes site-marquee {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}
+.site-marquee-track {
+  animation: site-marquee 32s linear infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .site-marquee-track {
+    animation: none;
+  }
+}
