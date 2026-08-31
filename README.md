@@ -1,4 +1,4 @@
-# Northshore Studio — Admin Dashboard
+# 24s Studio — Admin Dashboard
 
 A premium, production-quality admin dashboard frontend for a digital creative agency / corporate portfolio platform. **Frontend phase only** — all data flows through mock repositories designed so a Laravel 12/13 + Supabase backend can be connected later without refactoring the UI.
 
