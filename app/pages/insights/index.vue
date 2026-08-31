@@ -98,9 +98,9 @@ useSeoMeta({
           </button>
         </div>
 
-        <div v-else class="grid grid-cols-1 gap-x-10 gap-y-16 sm:grid-cols-3">
+        <TransitionGroup v-else tag="div" name="site-grid" class="grid grid-cols-1 gap-x-10 gap-y-16 sm:grid-cols-3">
           <SiteInsightsInsightCard v-for="insight in filtered" :key="insight.id" :insight="insight" />
-        </div>
+        </TransitionGroup>
       </template>
     </div>
 

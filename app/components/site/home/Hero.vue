@@ -29,7 +29,7 @@ onMounted(() => {
     class="relative flex min-h-[100svh] flex-col justify-end overflow-hidden"
     style="background: radial-gradient(120% 100% at 100% 0%, #241108 0%, #100b0e 45%, #0b0b0d 100%); color: #fff;"
   >
-    <div class="site-container relative z-10 pb-24 pt-40 sm:pb-32">
+    <div v-parallax-scroll class="site-container relative z-10 pb-24 pt-40 sm:pb-32">
       <p ref="eyebrowRef" class="site-eyebrow mb-6">
         Independent creative agency
       </p>

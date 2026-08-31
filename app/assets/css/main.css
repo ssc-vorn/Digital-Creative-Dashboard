@@ -239,6 +239,17 @@
   }
 }
 
+/* Filtered grids: items glide to their new positions when a filter changes,
+   instead of snapping. Only `move` is styled — entry is already owned by
+   v-reveal on the cards themselves, and animating both would double up. */
+.site-grid-move {
+  transition: transform 320ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.site-grid-leave-active {
+  display: none;
+}
+
 /* Clients marquee */
 @keyframes site-marquee {
   from { transform: translateX(0); }

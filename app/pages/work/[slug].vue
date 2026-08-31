@@ -56,6 +56,7 @@ useHead(() => ({
 
 <template>
   <div v-if="project">
+    <SiteReadingProgress />
     <SiteCaseStudyHero :project="project" />
 
     <div class="site-container py-20 sm:py-28">

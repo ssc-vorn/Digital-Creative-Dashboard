@@ -75,9 +75,9 @@ useSeoMeta({
           </button>
         </div>
 
-        <div v-else class="grid grid-cols-1 gap-10 sm:grid-cols-2 lg:grid-cols-3">
+        <TransitionGroup v-else tag="div" name="site-grid" class="grid grid-cols-1 gap-10 sm:grid-cols-2 lg:grid-cols-3">
           <SiteWorkProjectCard v-for="project in filtered" :key="project.id" :project="project" />
-        </div>
+        </TransitionGroup>
       </template>
     </div>
 

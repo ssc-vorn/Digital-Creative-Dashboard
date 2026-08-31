@@ -28,7 +28,7 @@ onMounted(() => {
 
 <template>
   <header class="relative flex min-h-[85svh] flex-col justify-end overflow-hidden" :style="{ backgroundColor: project.coverColor }">
-    <div class="site-container relative z-10 pb-16 pt-40 text-white sm:pb-24">
+    <div v-parallax-scroll class="site-container relative z-10 pb-16 pt-40 text-white sm:pb-24">
       <NuxtLink to="/work" class="mb-8 inline-flex items-center gap-2 text-sm font-medium text-white/80 transition-opacity hover:opacity-70 hover:text-white">
         <UIcon name="i-lucide-arrow-left" class="size-4" /> Back to work
       </NuxtLink>
